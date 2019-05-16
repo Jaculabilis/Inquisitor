@@ -52,6 +52,7 @@ def update(args):
 		for name in names:
 			if name not in source_names:
 				logger.error("Source not found: {}".format(name))
+				logger.debug("Known sources: {}".format(source_names))
 	else:
 		names = source_names
 	dungeon = Dungeon(args.dungeon)
