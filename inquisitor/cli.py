@@ -46,7 +46,14 @@ def update(args):
 		logger.error("dungeon must be a directory")
 		exit(-1)
 	sources = load_all_sources(args.srcdir)
-	names = args.sources or [s.SOURCE for s in sources]
+	source_names = [s.SOURCE for s in sources]
+	if args.sources:
+		names = args.sources
+		for name in names:
+			if name not in source_names:
+				logger.error("Source not found: {}".format(name))
+	else:
+		names = source_names
 	dungeon = Dungeon(args.dungeon)
 	for itemsource in sources:
 		if itemsource.SOURCE in names:
