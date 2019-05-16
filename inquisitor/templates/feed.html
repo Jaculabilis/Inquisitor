@@ -1,0 +1,51 @@
+<html>
+	<head>
+		<link rel="stylesheet" type="text/css" href="/feed.css" />
+		<script>
+			var deactivate = function (source, itemid) {
+				fetch('/deactivate/', {
+					method: 'POST',
+					headers: {
+						'Content-Type': 'application/json; charset=UTF-8',
+					},
+					body: JSON.stringify({source: source, itemid: itemid}),
+				})
+				.then(response => response.json())
+				.then(function (data) {
+					if (!data.active) {
+						document.getElementById(source + "-" + itemid)
+							.classList.add("strikethru")
+					}
+				});
+			}
+		</script>
+	</head>
+	<body>
+		<div id="wrapper">
+			{% if items %}
+			{% for item in items %}
+			<div class="readable-item" id="{{item.source}}-{{item.id}}">
+				<button onclick="javascript:deactivate('{{item.source}}', '{{item.id}}')">&#10005;</button>
+				{% if item.link %}
+				<a class="item-link" href="{{item.link}}" target="_blank">&#8663;</a>
+				{% endif %}
+				{% if item.body %}
+				<details>
+				<summary><span class="item-title">{{item.title}}</span></summary>
+				<p>{{item.body|safe}}</p>
+				</details>
+				{% else %}
+				<span class="item-title">{{item.title}}</span><br>
+				{% endif %}
+				<span class="item-info">{{item.time_readable}} {{item.author}}</span><br>
+				<span class="item-info">{{item.source}} {{item.id}} {{item.time_readable}}</span>
+			</div>
+			{% endfor %}
+			{% else %}
+			<div class="readable-item">
+				<span class="item-title">Feed is empty</span>
+			</div>
+			{% endif %}
+		</div>
+	</body>
+</html>
