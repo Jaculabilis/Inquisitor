@@ -22,7 +22,7 @@ dungeon = dungeon.Dungeon("dungeon")
 itemsources = core.load_all_sources("sources")
 
 
-@app.route("/feed/")
+@app.route("/")
 def root():
 	active_items = dungeon.get_active_items()
 	logger.info("Found {} active items".format(len(active_items)))
@@ -40,8 +40,3 @@ def deactivate():
 	item = dungeon.deactivate_item(params['source'], params['itemid'])
 	return jsonify({'active': item['active']})
 
-
-@app.route("/feed.css")
-def css():
-	with open("feed.css") as f:
-		return f.read()
