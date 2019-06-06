@@ -26,6 +26,15 @@ def run():
 		nargs="*")
 	update_parser.set_defaults(func=update)
 
+	deactivate_parser = subparsers.add_parser("deactivate", help="Deactivate items by source")
+	deactivate_parser.add_argument("--srcdir", help="Path to sources folder (default ./sources)",
+		default="./sources")
+	deactivate_parser.add_argument("--dungeon", help="Path to item cache folder (default ./dungeon)",
+		default="./dungeon")
+	deactivate_parser.add_argument("--sources", help="Sources to deactivate, by name",
+		nargs="*")
+	deactivate_parser.set_defaults(func=deactivate)
+
 	args = parser.parse_args()
 
 	# Configure logging
@@ -47,12 +56,12 @@ def update(args):
 		exit(-1)
 	sources = load_all_sources(args.srcdir)
 	source_names = [s.SOURCE for s in sources]
+	logger.debug("Known sources: {}".format(source_names))
 	if args.sources:
 		names = args.sources
 		for name in names:
 			if name not in source_names:
 				logger.error("Source not found: {}".format(name))
-				logger.debug("Known sources: {}".format(source_names))
 	else:
 		names = source_names
 	dungeon = Dungeon(args.dungeon)
@@ -61,3 +70,27 @@ def update(args):
 			new_items = dungeon.update(itemsource)
 			items = dungeon.get_active_items_for_folder(itemsource.SOURCE)
 			logger.info("{} new item{}".format(new_items, "s" if new_items != 1 else ""))
+
+def deactivate(args):
+	"""Deactivates all items in the given sources."""
+	if not os.path.isdir(args.dungeon):
+		logger.error("dungeon must be a directory")
+		exit(-1)
+	sources = load_all_sources(args.srcdir)
+	source_names = [s.SOURCE for s in sources]
+	logger.debug("Known sources: {}".format(source_names))
+	if args.sources:
+		names = args.sources
+		for name in names:
+			if name not in source_names:
+				logger.error("Source not found: {}".format(name))
+	else:
+		names = source_names
+	dungeon = Dungeon(args.dungeon)
+	for name in names:
+		if os.path.isdir(os.path.join(args.dungeon, name)):
+			items = dungeon.get_active_items_for_folder(name)
+			for item in items:
+				dungeon.deactivate_item(name, item['id'])
+		else:
+			logger.error("Folder not found: {}".format(name))
