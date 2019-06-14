@@ -1,5 +1,4 @@
 # Standard library imports
-import argparse
 import logging
 import os
 
@@ -10,51 +9,18 @@ import dungeon as dungeonlib
 logger = logging.getLogger("inquisitor.cli")
 
 
-def parse_args(commands):
-	parser = argparse.ArgumentParser()
-	parser.add_argument("command", default="help", help="The command to execute", choices=list(commands.keys()))
-	parser.add_argument("--srcdir", help="Path to sources folder (default ./sources)", default="./sources")
-	parser.add_argument("--dungeon", help="Path to item cache folder (default ./dungeon)", default="./dungeon")
-	parser.add_argument("--sources", help="Sources to update, by name", nargs="*")
-	parser.add_argument("--log", default="INFO", help="Set the log level (default: INFO)")
-
-	args = parser.parse_args()
-
-	if not os.path.isdir(args.srcdir):
-		print("Error: srcdir must be a directory")
-		exit(-1)
-	if not os.path.isdir(args.dungeon):
-		logger.error("Error: dungeon must be a directory")
-		exit(-1)
-	if not args.sources:
-		logger.error("Error: No sources specified")
-		exit(-1)
-
-	return args
-
-
-def run():
-	# Enumerate valid commands.
-	g = globals()
-	commands = {
-		name[8:] : g[name]
-		for name in g
-		if name.startswith("command_")}
-
-	args = parse_args(commands)
-
-	# Configure logging.
-	loglevel = getattr(logging, args.log.upper())
-	if not isinstance(loglevel, int):
-		raise ValueError("Invalid log level: {}".format(args.log))
-	logging.basicConfig(format='[%(levelname)s:%(filename)s:%(lineno)d] %(message)s', level=loglevel)
-
-	# Execute command.
-	commands[args.command](args)
-
-
 def command_update(args):
-	"""Fetches new items from sources and stores them in the dungeon."""
+	"""Fetch and store new items from the specified sources."""
+	if not os.path.isdir(args.srcdir):
+		print("update: Error: srcdir must be a directory")
+		return (-1)
+	if not os.path.isdir(args.dungeon):
+		logger.error("update: Error: dungeon must be a directory")
+		return (-1)
+	if not args.sources:
+		logger.error("update: Error: No sources specified")
+		return (-1)
+
 	# Initialize dungeon.
 	dungeon = dungeonlib.Dungeon(args.dungeon)
 
@@ -62,9 +28,17 @@ def command_update(args):
 	for source_arg in args.sources:
 		dungeon.update(source_arg, args)
 
+	return 0
 
 def command_deactivate(args):
-	"""Deactivates all items in the given sources."""
+	"""Deactivate all items in the specified dungeon cells."""
+	if not os.path.isdir(args.dungeon):
+		logger.error("deactivate: Error: dungeon must be a directory")
+		return (-1)
+	if not args.sources:
+		logger.error("deactivate: Error: No sources specified")
+		return (-1)
+
 	# Initialize dungeon.
 	dungeon = dungeonlib.Dungeon(args.dungeon)
 
@@ -82,3 +56,5 @@ def command_deactivate(args):
 				item.deactivate()
 				count += 1
 		logger.info("Deactivated {} items in '{}'".format(count, source_name))
+
+	return 0
