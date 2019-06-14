@@ -7,10 +7,8 @@ import time
 import random
 import traceback
 
-
 # Application imports
-from item import create_item
-
+import item # This will define create_item as a builtin
 
 # Globals
 logger = logging.getLogger("inquisitor.dungeon")
@@ -85,7 +83,7 @@ class DungeonCell():
 			with open(state_path, 'r', encoding='utf-8') as f:
 				self.state = ast.literal_eval(f.read())
 
-	def _item_path(key):
+	def _item_path(self, key):
 		return os.path.join(self.path, key + ".item")
 
 	def __getitem__(self, key):
@@ -95,7 +93,7 @@ class DungeonCell():
 		return ReadableItem(self.dungeon_path, self.name, key)
 
 	def __setitem__(self, key, value):
-		logger.info("Setting item {} in cell {}".format(key, self.name))
+		logger.debug("Setting item {} in cell {}".format(key, self.name))
 		if type(value) is ReadableItem:
 			value = value.item
 		if type(value) is not dict:
@@ -105,7 +103,7 @@ class DungeonCell():
 			f.write(str(value))
 
 	def __delitem__(self, key):
-		logger.info("Deleting item '{}' in cell '{}'".format(key, self.name))
+		logger.debug("Deleting item '{}' in cell '{}'".format(key, self.name))
 		filepath = self._item_path(key)
 		if os.path.isfile(filepath):
 			os.remove(filepath)
@@ -131,7 +129,7 @@ class DungeonCell():
 		# Get the ids of the existing items.
 		prior_item_ids = [item_id for item_id in self]
 		# Get the new items.
-		new_items = itemsource.fetch_new(state, args)
+		new_items = source.fetch_new(self.state, args)
 		self.save_state()
 		new_count = del_count = 0
 		for item in new_items:
@@ -171,7 +169,7 @@ class Dungeon():
 		for filename in os.listdir(self.path):
 			if not os.path.isdir(os.path.join(self.path, filename)):
 				continue
-			if not os.path.isfile(os.path.join(self.path, filename, 'status')):
+			if not os.path.isfile(os.path.join(self.path, filename, 'state')):
 				continue
 			self.cells[filename] = DungeonCell(self.path, filename)
 		# Ensure Inquisitor's source is present
@@ -194,7 +192,6 @@ class Dungeon():
 			yield name
 
 	def push_error_item(self, title, body=None):
-		logger.error(title)
 		item = create_item(
 			'inquisitor',
 			'{:x}'.format(random.getrandbits(16 * 4)),
@@ -208,25 +205,33 @@ class Dungeon():
 		necessary. Returns the source and its DungeonCell if the source is
 		valid and None, None otherwise.
 		"""
-		# Check if the named source is present in the sources directory.
-		source_file_path = os.path.join(sources_path, source_name + ".py")
-		if not os.path.isfile(source_file_path):
+		# Move to the sources directory.
+		cwd = os.getcwd()
+		os.chdir(sources_path)
+		# Check if the named source is present.
+		source_file_name = source_name + ".py"
+		if not os.path.isfile(source_file_name):
+			os.chdir(cwd)
 			msg = "Could not find source '{}'".format(source_name)
+			logger.error(msg)
 			self.push_error_item(msg)
 			return None, None
 		# Try to import the source module.
 		try:
-			logger.debug("Loading module {}".format(source_file_path))
-			spec = importlib.util.spec_from_file_location("itemsource", source_file_path)
+			logger.debug("Loading module {}".format(source_file_name))
+			spec = importlib.util.spec_from_file_location("itemsource", source_file_name)
 			itemsource = importlib.util.module_from_spec(spec)
 			spec.loader.exec_module(itemsource)
 			if not hasattr(itemsource, 'fetch_new'):
 				raise ImportError("fetch_new missing")
 		except Exception:
+			os.chdir(cwd)
 			msg = "Error importing source '{}'".format(source_name)
+			logger.error("{}\n{}".format(msg, traceback.format_exc()))
 			self.push_error_item(msg, traceback.format_exc())
 			return None, None
 		# Since the source is valid, get or create the source cell.
+		os.chdir(cwd)
 		if source_name not in self:
 			self[source_name] = DungeonCell(self.path, source_name)
 
@@ -255,5 +260,6 @@ class Dungeon():
 				deleted_count, "s" if deleted_count != 1 else ""))
 		except:
 			msg = "Error fetching items from source '{}'".format(source_name)
+			logger.error("{}\n{}".format(msg, traceback.format_exc()))
 			self.push_error_item(msg, traceback.format_exc())
 			return

@@ -4,93 +4,81 @@ import logging
 import os
 
 # Application imports
-from core import load_all_sources
-from dungeon import Dungeon
+import dungeon as dungeonlib
 
 # Globals
 logger = logging.getLogger("inquisitor.cli")
 
 
-def run():
+def parse_args(commands):
 	parser = argparse.ArgumentParser()
+	parser.add_argument("command", default="help", help="The command to execute", choices=list(commands.keys()))
+	parser.add_argument("--srcdir", help="Path to sources folder (default ./sources)", default="./sources")
+	parser.add_argument("--dungeon", help="Path to item cache folder (default ./dungeon)", default="./dungeon")
+	parser.add_argument("--sources", help="Sources to update, by name", nargs="*")
 	parser.add_argument("--log", default="INFO", help="Set the log level (default: INFO)")
-	subparsers = parser.add_subparsers(help="Command to execute", dest="command")
-	subparsers.required = True
-
-	update_parser = subparsers.add_parser("update", help="Fetch new items")
-	update_parser.add_argument("--srcdir", help="Path to sources folder (default ./sources)",
-		default="./sources")
-	update_parser.add_argument("--dungeon", help="Path to item cache folder (default ./dungeon)",
-		default="./dungeon")
-	update_parser.add_argument("--sources", help="Sources to update, by name",
-		nargs="*")
-	update_parser.set_defaults(func=update)
-
-	deactivate_parser = subparsers.add_parser("deactivate", help="Deactivate items by source")
-	deactivate_parser.add_argument("--srcdir", help="Path to sources folder (default ./sources)",
-		default="./sources")
-	deactivate_parser.add_argument("--dungeon", help="Path to item cache folder (default ./dungeon)",
-		default="./dungeon")
-	deactivate_parser.add_argument("--sources", help="Sources to deactivate, by name",
-		nargs="*")
-	deactivate_parser.set_defaults(func=deactivate)
 
 	args = parser.parse_args()
 
-	# Configure logging
+	if not os.path.isdir(args.srcdir):
+		print("Error: srcdir must be a directory")
+		exit(-1)
+	if not os.path.isdir(args.dungeon):
+		logger.error("Error: dungeon must be a directory")
+		exit(-1)
+	if not args.sources:
+		logger.error("Error: No sources specified")
+		exit(-1)
+
+	return args
+
+
+def run():
+	# Enumerate valid commands.
+	g = globals()
+	commands = {
+		name[8:] : g[name]
+		for name in g
+		if name.startswith("command_")}
+
+	args = parse_args(commands)
+
+	# Configure logging.
 	loglevel = getattr(logging, args.log.upper())
 	if not isinstance(loglevel, int):
 		raise ValueError("Invalid log level: {}".format(args.log))
 	logging.basicConfig(format='[%(levelname)s:%(filename)s:%(lineno)d] %(message)s', level=loglevel)
 
-	args.func(args)
+	# Execute command.
+	commands[args.command](args)
 
 
-def update(args):
+def command_update(args):
 	"""Fetches new items from sources and stores them in the dungeon."""
-	if not os.path.isdir(args.srcdir):
-		logger.error("srcdir must be a directory")
-		exit(-1)
-	if not os.path.isdir(args.dungeon):
-		logger.error("dungeon must be a directory")
-		exit(-1)
-	sources = load_all_sources(args.srcdir)
-	source_names = [s.SOURCE for s in sources]
-	logger.debug("Known sources: {}".format(source_names))
-	if args.sources:
-		names = args.sources
-		for name in names:
-			if name not in source_names:
-				logger.error("Source not found: {}".format(name))
-	else:
-		names = source_names
-	dungeon = Dungeon(args.dungeon)
-	for itemsource in sources:
-		if itemsource.SOURCE in names:
-			new_items = dungeon.update(itemsource)
-			items = dungeon.get_active_items_for_folder(itemsource.SOURCE)
-			logger.info("{} new item{}".format(new_items, "s" if new_items != 1 else ""))
+	# Initialize dungeon.
+	dungeon = dungeonlib.Dungeon(args.dungeon)
 
-def deactivate(args):
+	# Process each source argument.
+	for source_arg in args.sources:
+		dungeon.update(source_arg, args)
+
+
+def command_deactivate(args):
 	"""Deactivates all items in the given sources."""
-	if not os.path.isdir(args.dungeon):
-		logger.error("dungeon must be a directory")
-		exit(-1)
-	sources = load_all_sources(args.srcdir)
-	source_names = [s.SOURCE for s in sources]
-	logger.debug("Known sources: {}".format(source_names))
-	if args.sources:
-		names = args.sources
-		for name in names:
-			if name not in source_names:
-				logger.error("Source not found: {}".format(name))
-	else:
-		names = source_names
-	dungeon = Dungeon(args.dungeon)
-	for name in names:
-		if os.path.isdir(os.path.join(args.dungeon, name)):
-			items = dungeon.get_active_items_for_folder(name)
-			for item in items:
-				dungeon.deactivate_item(name, item['id'])
-		else:
-			logger.error("Folder not found: {}".format(name))
+	# Initialize dungeon.
+	dungeon = dungeonlib.Dungeon(args.dungeon)
+
+	# Deactivate all items in each source.
+	for source_name in args.sources:
+		if source_name not in dungeon:
+			print("Error: No source named '{}'".format(source_name))
+			print("Valid source names are: " + " ".join([s for s in dungeon]))
+			continue
+		cell = dungeon[source_name]
+		count = 0
+		for item_id in cell:
+			item = cell[item_id]
+			if item['active']:
+				item.deactivate()
+				count += 1
+		logger.info("Deactivated {} items in '{}'".format(count, source_name))

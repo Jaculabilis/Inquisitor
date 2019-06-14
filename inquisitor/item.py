@@ -2,14 +2,13 @@
 import importlib.util
 import os
 import logging
-import time
-
 
 # Globals
 logger = logging.getLogger("inquisitor.item")
 
 
 def create_item(source, item_id, title, link=None, time=None, author=None, body=None):
+	import time
 	item = {
 		'id': item_id,
 		'source': source,
@@ -26,3 +25,6 @@ def create_item(source, item_id, title, link=None, time=None, author=None, body=
 	if body is not None:
 		item['body'] = body
 	return item
+
+import builtins
+builtins.create_item = create_item
