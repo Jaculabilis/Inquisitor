@@ -6,7 +6,7 @@ import logging
 from flask import Flask, render_template, request, jsonify
 
 # Application imports
-from inquisitor import dungeon, core
+from inquisitor import dungeon
 
 # Globals
 logger = logging.getLogger("inquisitor.app")
@@ -19,7 +19,6 @@ logger.addHandler(console)
 
 app = Flask(__name__)
 dungeon = dungeon.Dungeon("dungeon")
-itemsources = core.load_all_sources("sources")
 
 
 @app.route("/")
