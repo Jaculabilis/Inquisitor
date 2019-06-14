@@ -7,7 +7,7 @@ import logging
 logger = logging.getLogger("inquisitor.item")
 
 
-def create_item(source, item_id, title, link=None, time=None, author=None, body=None):
+def create_item(source, item_id, title, link=None, ts=None, author=None, body=None):
 	import time
 	item = {
 		'id': item_id,
@@ -18,8 +18,8 @@ def create_item(source, item_id, title, link=None, time=None, author=None, body=
 	}
 	if link is not None:
 		item['link'] = link
-	if time is not None:
-		item['time'] = time
+	if ts is not None:
+		item['time'] = ts
 	if author is not None:
 		item['author'] = author
 	if body is not None:

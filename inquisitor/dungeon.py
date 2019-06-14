@@ -125,11 +125,13 @@ class DungeonCell():
 			f.write(str(self.state))
 
 	def update_from_source(self, source, args):
-		logger.info("Updating source {}".format(self.name))
+		logger.info("Updating source '{}'".format(self.name))
 		# Get the ids of the existing items.
 		prior_item_ids = [item_id for item_id in self]
+		logger.debug("Found {} prior items".format(len(prior_item_ids)))
 		# Get the new items.
 		new_items = source.fetch_new(self.state, args)
+		logger.debug("Fetched {} items".format(len(new_items)))
 		self.save_state()
 		new_count = del_count = 0
 		for item in new_items:
