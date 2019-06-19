@@ -9,6 +9,9 @@ logger = logging.getLogger("inquisitor.item")
 
 def create_item(source, item_id, title, link=None, ts=None, author=None, body=None, tags=None):
 	import time
+	taglist = tags or []
+	if source not in taglist:
+		taglist.append(source)
 	item = {
 		'id': item_id,
 		'source': source,
@@ -19,7 +22,7 @@ def create_item(source, item_id, title, link=None, ts=None, author=None, body=No
 		'time': ts,
 		'author': author,
 		'body': body,
-		'tags': [] if tags is None else tags,
+		'tags': taglist,
 	}
 	return item
 
