@@ -48,7 +48,7 @@
 					{% endif %}
 				</span><br>
 				{% endif %}
-				<span class="item-info">
+				<span class="item-info" title="{{ 'Tags: {}'.format(', '.join(item.tags)) }}">
 					{{item.source}} {{item.id}} {{item.created|datetimeformat}}
 				</span>
 			</div>
