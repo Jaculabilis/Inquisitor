@@ -39,8 +39,8 @@ def datetimeformat(value, formatstr="%Y-%m-%d %H:%M:%S"):
 def root():
 	dungeon = dungeonlib.Dungeon("dungeon")
 	filter_lambda = list_filter(
-		whitelist=request.args.get('wl'),
-		blacklist=request.args.get('bl'))
+		whitelist=request.args.get('only'),
+		blacklist=request.args.get('not'))
 	active_items = []
 	for cell_name in dungeon:
 		cell = dungeon[cell_name]
