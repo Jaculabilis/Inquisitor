@@ -8,14 +8,11 @@ or `--sources example:argument`.
 from datetime import date
 import time
 
-# Globals
-SOURCE = "examplesource"
-
 
 def fetch_new(state, args):
 	now = date.today()
 	item = create_item(
-		SOURCE,
+		"example",
 		'{}-{}-{}'.format(now.year, now.month, now.day),
 		"Today is {}-{}-{}".format(now.year, now.month, now.day),
 		ts=time.time(),
