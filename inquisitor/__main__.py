@@ -49,10 +49,11 @@ def main():
 	args = parse_args(commands)
 
 	# Configure logging.
-	loglevel = getattr(logging, args.log.upper())
-	if not isinstance(loglevel, int):
-		raise ValueError("Invalid log level: {}".format(args.log))
-	logging.basicConfig(format='[%(levelname)s:%(filename)s:%(lineno)d] %(message)s', level=loglevel)
+	if args.command != 'run':
+		loglevel = getattr(logging, args.log.upper())
+		if not isinstance(loglevel, int):
+			raise ValueError("Invalid log level: {}".format(args.log))
+		logging.basicConfig(format='[%(levelname)s:%(filename)s:%(lineno)d] %(message)s', level=loglevel)
 
 	# Execute command.
 	if args.command:

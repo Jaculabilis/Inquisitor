@@ -35,7 +35,13 @@ class ReadableItem():
 			self.item = ast.literal_eval(f.read())
 
 	def __getitem__(self, key):
-		return self.item[key]
+		if key in self.item:
+			return self.item[key]
+		else:
+			if key == 'tags':
+				return []
+			else:
+				return None
 
 	def __setitem__(self, key, value):
 		raise TypeError("ReadableItem is not writable")

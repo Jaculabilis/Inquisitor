@@ -38,8 +38,19 @@
 				{% else %}
 				<span class="item-title">{{item.title}}</span><br>
 				{% endif %}
-				<span class="item-info">{{item.time_readable}} {{item.author}}</span><br>
-				<span class="item-info">{{item.source}} {{item.id}} {{item.created}}</span>
+				{% if item.author or item.time %}
+				<span class="item-info">
+					{% if item.author %}
+					{{item.author}}
+					{% endif %}
+					{% if item.time %}
+					{{item.time|datetimeformat}}
+					{% endif %}
+				</span><br>
+				{% endif %}
+				<span class="item-info">
+					{{item.source}} {{item.id}} {{item.created|datetimeformat}}
+				</span>
 			</div>
 			{% endfor %}
 			{% else %}
