@@ -26,7 +26,9 @@
 			{% if items %}
 			{% for item in items %}
 			<div class="readable-item" id="{{item.source}}-{{item.id}}">
+				{% if item.id %}
 				<button onclick="javascript:deactivate('{{item.source}}', '{{item.id}}')">&#10005;</button>
+				{% endif %}
 				{% if item.link %}
 				<a class="item-link" href="{{item.link}}" target="_blank">&#8663;</a>
 				{% endif %}
@@ -49,7 +51,11 @@
 				</span><br>
 				{% endif %}
 				<span class="item-info" title="{{ 'Tags: {}'.format(', '.join(item.tags)) }}">
-					{{item.source}} {{item.id}} {{item.created|datetimeformat}}
+					{{item.source}}
+					{% if item.id %}
+					{{item.id}}
+					{% endif %}
+					{{item.created|datetimeformat}}
 				</span>
 			</div>
 			{% endfor %}

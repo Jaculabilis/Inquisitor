@@ -37,3 +37,6 @@ summary:focus {
 	text-decoration: line-through;
 	color: rgba(0, 0, 0, 0.2);
 }
+pre {
+	white-space: pre-wrap;
+}
