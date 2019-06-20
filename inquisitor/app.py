@@ -80,19 +80,20 @@ def root():
 		}
 		active_items = [read_ex] + active_items
 
-	# Create the feed control item
-	wl_minus = [make_query_link("only - {}".format(tag), [t for t in wl if t != tag], bl) for tag in wl]
-	wl_plus = [make_query_link("only + {}".format(tag), wl + [tag], bl) for tag in active_tags if tag not in wl]
-	bl_minus = [make_query_link("not - {}".format(tag), wl, [t for t in bl if t != tag]) for tag in bl]
-	bl_plus = [make_query_link("not + {}".format(tag), wl, bl + [tag]) for tag in active_tags if tag not in bl]
-	body = "<pre>{}</pre>".format("\n".join(wl_minus + wl_plus + bl_minus + bl_plus))
+	if active_items:
+		# Create the feed control item
+		wl_minus = [make_query_link("only - {}".format(tag), [t for t in wl if t != tag], bl) for tag in wl]
+		wl_plus = [make_query_link("only + {}".format(tag), wl + [tag], bl) for tag in active_tags if tag not in wl]
+		bl_minus = [make_query_link("not - {}".format(tag), wl, [t for t in bl if t != tag]) for tag in bl]
+		bl_plus = [make_query_link("not + {}".format(tag), wl, bl + [tag]) for tag in active_tags if tag not in bl]
+		body = "<pre>{}</pre>".format("\n".join(wl_minus + wl_plus + bl_minus + bl_plus))
 
-	feed_control = {
-		'title': 'Feed Control',
-		'body': body,
-		'created': None,
-	}
-	active_items = [feed_control] + active_items
+		feed_control = {
+			'title': 'Feed Control',
+			'body': body,
+			'created': None,
+		}
+		active_items = [feed_control] + active_items
 
 	return render_template("feed.html", items=active_items[:100])
 
