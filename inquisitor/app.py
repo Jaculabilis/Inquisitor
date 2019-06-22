@@ -100,6 +100,7 @@ def root():
 
 @app.route("/deactivate/", methods=['POST'])
 def deactivate():
+	dungeon = dungeonlib.Dungeon("dungeon")
 	params = request.get_json()
 	if 'source' not in params and 'itemid' not in params:
 		logger.error("Bad request params: {}".format(params))
