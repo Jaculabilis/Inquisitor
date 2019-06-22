@@ -80,7 +80,7 @@ def root():
 		}
 		active_items = [read_ex] + active_items
 
-	if active_items:
+	if total > 0:
 		# Create the feed control item
 		wl_minus = [make_query_link("only - {}".format(tag), [t for t in wl if t != tag], bl) for tag in wl]
 		wl_plus = [make_query_link("only + {}".format(tag), wl + [tag], bl) for tag in active_tags if tag not in wl]
