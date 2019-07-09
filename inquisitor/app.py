@@ -92,7 +92,7 @@ def root():
 		body = "<pre>{}</pre>".format("\n".join(wl_minus + wl_plus + bl_minus + bl_plus))
 
 		feed_control = {
-			'title': 'Feed Control',
+			'title': 'Feed Control [{}]'.format(total),
 			'body': body,
 			'created': None,
 		}
