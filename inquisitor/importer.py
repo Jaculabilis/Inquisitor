@@ -103,7 +103,10 @@ def update_source(source_name, fetch_new):
 	# when they are both inactive and past their ttl date.
 	now = timestamp.now()
 	for prior_id, prior_item in prior_items.items():
-		ttl_date = prior_item['created'] + prior_item['ttl']
+		if 'created' in prior_item and 'ttl' in prior_item:
+			ttl_date = prior_item['created'] + prior_item['ttl']
+		else:
+			ttl_date = 0
 		if not prior_item['active'] and ttl_date < now:
 			del_count += 1
 			file_path = os.path.join(DUNGEON_PATH, prior_item['source'], prior_item['id'] + ".item")
