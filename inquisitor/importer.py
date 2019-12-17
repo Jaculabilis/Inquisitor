@@ -74,7 +74,7 @@ def update_source(source_name, fetch_new):
 			# If the item is new, write it.
 			new_count += 1
 			s = json.dumps(item)
-			path = os.path.join(DUNGEON_PATH, item['source'], item['id'])
+			path = os.path.join(DUNGEON_PATH, item['source'], item['id'] + ".item")
 			with open(path, 'w', encoding="utf8") as f:
 				f.write(s)
 
