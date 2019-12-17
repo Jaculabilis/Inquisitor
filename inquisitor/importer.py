@@ -16,6 +16,18 @@ def update_sources(*source_names):
 			error.as_item("Error importing source '{}'".format(source_name), traceback.format_exc())
 			continue
 
+		cell_path = os.path.join(DUNGEON_PATH, source_name)
+		if not os.path.isdir(cell_path):
+			try:
+				logger.info("Creating cell for source '{}'".format(source_name))
+				os.mkdir(cell_path)
+				state_path = os.path.join(cell_path, "state")
+				with open(state_path, 'w', encoding='utf8') as f:
+					f.write(json.dumps({}))
+			except Exception as e:
+				error.as_item("Error initializing source '{}'".format(source_name), traceback.format_exc())
+				continue
+
 		try:
 			logger.info("Updating source '{}'".format(source_name))
 			new_count, del_count = update_source(source_name, source_module.fetch_new)
