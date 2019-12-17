@@ -1,21 +1,17 @@
 """
 An example itemsource that produces an item with the current date.
-ANy args provided will be added to the item body.
 Fetch new items with `python inquisitor update --sources example`
-or `--sources example:argument`.
 """
 # Standard library imports
 from datetime import date
 import time
 
 
-def fetch_new(state, args):
+def fetch_new(state):
 	now = date.today()
-	item = create_item(
-		"example",
-		'{}-{}-{}'.format(now.year, now.month, now.day),
-		"Today is {}-{}-{}".format(now.year, now.month, now.day),
-		ts=time.time(),
-		body=args
-	)
+	item = {
+		'source': "example",
+		'id': '{}-{}-{}'.format(now.year, now.month, now.day),
+		'title': "Today is {}-{}-{}".format(now.year, now.month, now.day),
+	}
 	return [item]

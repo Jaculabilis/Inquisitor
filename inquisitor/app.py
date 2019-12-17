@@ -1,25 +1,17 @@
 # Standard library imports
-import datetime
-import logging
+import os
 import traceback
 
 # Third party imports
 from flask import Flask, render_template, request, jsonify
 
 # Application imports
-import dungeon as dungeonlib
+from configs import logger, DUNGEON_PATH
+import loader
+import timestamp
 
 # Globals
-logger = logging.getLogger("inquisitor.app")
-logger.setLevel(logging.INFO)
-console = logging.StreamHandler()
-console.setLevel(logging.INFO)
-formatter = logging.Formatter('[%(asctime)s %(levelname)s:%(filename)s:%(lineno)d] %(message)s')
-console.setFormatter(formatter)
-logger.addHandler(console)
-
 app = Flask(__name__)
-dungeon = dungeonlib.Dungeon("dungeon")
 
 
 def make_query_link(text, wl, bl):
@@ -30,16 +22,11 @@ def make_query_link(text, wl, bl):
 	return '<a href="{1}">{0}</a>'.format(text, query)
 
 @app.template_filter("datetimeformat")
-def datetimeformat(value, formatstr="%Y-%m-%d %H:%M:%S"):
-	if value is None:
-		return ""
-	dt = datetime.datetime.fromtimestamp(value)
-	return dt.strftime(formatstr)
+def datetimeformat(value):
+	return timestamp.stamp_to_readable(value) if value is not None else ""
 
 @app.route("/")
 def root():
-	dungeon = dungeonlib.Dungeon("dungeon")
-
 	# Determine exclusion filters
 	filters = []
 	wl_param = request.args.get('only')
@@ -53,19 +40,10 @@ def root():
 
 	# Get all active+filtered items and all active tags
 	total = 0
+	items, errors = loader.load_active_items()
 	active_items = []
 	active_tags = set()
-	item_read_exceptions = []
-	for cell in dungeon:
-		for item_id in dungeon[cell]:
-			try:
-				item = dungeon[cell][item_id]
-			except:
-				msg = "Exception reading {}/{}".format(cell, item_id)
-				logger.error(msg)
-				item_read_exceptions.append(msg)
-				item_read_exceptions.append(traceback.format_exc())
-				continue
+	for item in items:
 			if item['active']:
 				active_tags |= set(item['tags'])
 				total += 1
@@ -75,13 +53,13 @@ def root():
 	active_items.sort(key=lambda i: i['time'] if 'time' in i and i['time'] else 0)
 
 	logger.info("Returning {} of {} items".format(len(active_items), total))
-	if item_read_exceptions:
+	if errors:
 		read_ex = {
 			'title': 'Read errors',
-			'body': "<pre>{}</pre>".format("\n\n".join(item_read_exceptions)),
+			'body': "<pre>{}</pre>".format("\n\n".join(errors)),
 			'created': None,
 		}
-		active_items = [read_ex] + active_items
+		active_items.insert(0, read_ex)
 
 	if total > 0:
 		# Create the feed control item
@@ -96,18 +74,17 @@ def root():
 			'body': body,
 			'created': None,
 		}
-		active_items = [feed_control] + active_items
+		active_items.insert(0, feed_control)
 
 	return render_template("feed.html", items=active_items[:100])
 
 
 @app.route("/deactivate/", methods=['POST'])
 def deactivate():
-	dungeon = dungeonlib.Dungeon("dungeon")
 	params = request.get_json()
 	if 'source' not in params and 'itemid' not in params:
 		logger.error("Bad request params: {}".format(params))
-	item = dungeon[params['source']][params['itemid']]
-	item.deactivate()
+	item = loader.WritethroughDict(os.path.join(DUNGEON_PATH, params['source'], params['itemid'] + '.item'))
+	item['active'] = False
 	return jsonify({'active': item['active']})
 

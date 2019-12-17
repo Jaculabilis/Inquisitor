@@ -163,16 +163,12 @@ def command_feed(args):
 		print()
 
 
-# def command_run(args):
-# 	"""Run the default Flask server."""
-# 	pass
-
-# def run_flask_server(args):
-# 	"""Run the default flask server serving from the specified dungeon."""
-# 	try:
-# 		from app import app
-# 		app.run()
-# 		return 0
-# 	except Exception as e:
-# 		logger.error(e)
-# 		return (-1)
+def command_run(args):
+	"""Run the default Flask server."""
+	try:
+		from app import app
+		app.run()
+		return 0
+	except Exception as e:
+		logger.error(e)
+		return -1
