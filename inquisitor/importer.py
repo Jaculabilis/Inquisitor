@@ -97,6 +97,9 @@ def update_source(source_name, fetch_new):
 			file_path = os.path.join(DUNGEON_PATH, prior_item['source'], prior_item['id'] + ".item")
 			os.remove(file_path)
 
+	# Note update timestamp in state
+	state['last_updated'] = timestamp.now()
+
 	# Return counts
 	return new_count, del_count
 
