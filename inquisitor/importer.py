@@ -112,7 +112,9 @@ def populate_new(item):
 	if 'time' not in item: item['time'] = None
 	if 'author' not in item: item['author'] = None
 	if 'body' not in item: item['body'] = None
-	if 'tags' not in item: item['tags'] = [item['source']]
+	tags = item['tags'] if 'tags' in item else []
+	if item['source'] not in tags: tags.insert(0, item['source'])
+	item['tags'] = tags
 	if 'ttl' not in item: item['ttl'] = 0
 
 def populate_old(prior, new):
