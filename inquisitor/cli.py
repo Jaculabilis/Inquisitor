@@ -153,7 +153,8 @@ def command_feed(args):
 	width = min(80, size.columns)
 
 	for item in items:
-		titles = [item['title']]
+		title = item['title'] if 'title' in item else ""
+		titles = [title]
 		while len(titles[-1]) > width - 4:
 			i = titles[-1][:width - 4].rfind(' ')
 			titles = titles[:-1] + [titles[-1][:i].strip(), titles[-1][i:].strip()]
@@ -162,13 +163,14 @@ def command_feed(args):
 			print("| {0:<{1}} |".format(title, width - 4))
 		print("|{0:<{1}}|".format("", width - 2))
 		info1 = ""
-		if item['author']:
+		if 'author' in title and item['author']:
 			info1 += item['author'] + "  "
-		if item['time']:
+		if 'time' in item and item['time']:
 			info1 += timestamp.stamp_to_readable(item['time'])
 		print("| {0:<{1}} |".format(info1, width - 4))
+		created = timestamp.stamp_to_readable(item['created']) if 'created' in item else ""
 		info2 = "{0}  {1}  {2}".format(
-			item['source'], item['id'], timestamp.stamp_to_readable(item['created']))
+			item['source'], item['id'], created)
 		print("| {0:<{1}} |".format(info2, width - 4))
 		print('+' + (width - 2) * '-' + '+')
 		print()
