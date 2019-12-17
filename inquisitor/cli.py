@@ -116,6 +116,53 @@ def command_add(args):
 	logger.info(item)
 
 
+def command_feed(args):
+	"""Print the current feed."""
+	if not os.path.isdir(DUNGEON_PATH):
+		logger.error("Couldn't find dungeon. Set INQUISITOR_DUNGEON or cd to parent folder of ./dungeon")
+		return -1
+
+	import shutil
+	import loader
+	import timestamp
+
+	items, errors = loader.load_active_items()
+	if not items and not errors:
+		print("Feed is empty")
+		return 0
+
+	if errors:
+		items.insert(0, {
+			'id': 'read-errors',
+			'title': '{} read errors'.format(len(errors)),
+			'body': "\n".join(errors)
+		})
+
+	size = shutil.get_terminal_size((80, 20))
+	width = min(80, size.columns)
+
+	for item in items:
+		titles = [item['title']]
+		while len(titles[-1]) > width - 4:
+			i = titles[-1][:width - 4].rfind(' ')
+			titles = titles[:-1] + [titles[-1][:i].strip(), titles[-1][i:].strip()]
+		print('+' + (width - 2) * '-' + '+')
+		for title in titles:
+			print("| {0:<{1}} |".format(title, width - 4))
+		print("|{0:<{1}}|".format("", width - 2))
+		info1 = ""
+		if item['author']:
+			info1 += item['author'] + "  "
+		if item['time']:
+			info1 += timestamp.stamp_to_readable(item['time'])
+		print("| {0:<{1}} |".format(info1, width - 4))
+		info2 = "{0}  {1}  {2}".format(
+			item['source'], item['id'], timestamp.stamp_to_readable(item['created']))
+		print("| {0:<{1}} |".format(info2, width - 4))
+		print('+' + (width - 2) * '-' + '+')
+		print()
+
+
 # def command_run(args):
 # 	"""Run the default Flask server."""
 # 	pass

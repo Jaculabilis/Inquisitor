@@ -52,10 +52,30 @@ def load_items(source_name):
 	items = {}
 	errors = []
 	for filename in os.listdir(cell_path):
-		try:
-			path = os.path.join(cell_path, filename)
-			item = WritethroughDict(path)
-			items[item['id']] = item
-		except Exception as e:
-			errors.append(filename)
+		if filename.endswith('.item'):
+			try:
+				path = os.path.join(cell_path, filename)
+				item = WritethroughDict(path)
+				items[item['id']] = item
+			except Exception as e:
+				errors.append(filename)
+	return items, errors
+
+def load_active_items():
+	"""
+	Returns a list of active items and a list of unreadable items.
+	"""
+	items = []
+	errors = []
+	for cell_name in os.listdir(DUNGEON_PATH):
+		cell_path = os.path.join(DUNGEON_PATH, cell_name)
+		for filename in os.listdir(cell_path):
+			if filename.endswith('.item'):
+				try:
+					path = os.path.join(cell_path, filename)
+					item = WritethroughDict(path)
+					if item['active']:
+						items.append(item)
+				except Exception as e:
+					errors.append(filename)
 	return items, errors
