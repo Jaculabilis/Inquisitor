@@ -85,6 +85,7 @@ def command_add(args):
 	parser.add_argument("--body", help="HTML")
 	parser.add_argument("--tags", help="Comma-separated list")
 	parser.add_argument("--ttl", type=int, help="Cleanup protection in seconds")
+	parser.add_argument("--create", action="store_true", help="Create source if it doesn't exist")
 	args = parser.parse_args(args)
 
 	if not args.title:
@@ -93,6 +94,15 @@ def command_add(args):
 	if not os.path.isdir(DUNGEON_PATH):
 		logger.error("Couldn't find dungeon. Set INQUISITOR_DUNGEON or cd to parent folder of ./dungeon")
 		return -1
+
+	source = args.source or 'inquisitor'
+	cell_path = os.path.join(DUNGEON_PATH, source)
+	if not os.path.isdir(cell_path):
+		if args.create:
+			os.mkdir(cell_path)
+		else:
+			logger.error("Source '{}' does not exist".format(source))
+			return -1
 
 	from importer import populate_new
 	item = {
@@ -109,6 +119,7 @@ def command_add(args):
 	if args.tags: item['tags'] = [str(tag) for tag in args.tags]
 	if args.ttl: item['ttl'] = int(args.ttl)
 	populate_new(item)
+
 	s = json.dumps(item, indent=2)
 	path = os.path.join(DUNGEON_PATH, item['source'], item['id'] + '.item')
 	with open(path, 'w', encoding='utf8') as f:
