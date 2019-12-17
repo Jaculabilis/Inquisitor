@@ -13,6 +13,8 @@ def as_item(title, body=None):
 		'id': iid,
 		'source': 'inquisitor',
 		'title': title,
+		'active': True,
+		'tags': ['inquisitor', 'error']
 	}
 	if body is not None:
 		item['body'] = '<pre>{}</pre>'.format(body)
