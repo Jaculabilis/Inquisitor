@@ -44,14 +44,14 @@ def root():
 	active_items = []
 	active_tags = {}
 	for item in items:
-			if item['active']:
+		if item['active']:
 			for tag in item['tags']:
 				if tag not in active_tags: active_tags[tag] = 0
 				active_tags[tag] += 1
 			# active_tags |= set(item['tags'])
-				total += 1
-				if not any(map(lambda f: f(item), filters)):
-					active_items.append(item)
+			total += 1
+			if not any(map(lambda f: f(item), filters)):
+				active_items.append(item)
 	# Sort items by time
 	active_items.sort(key=lambda i: i['time'] if 'time' in i and i['time'] else 0)
 
