@@ -44,3 +44,7 @@ summary:focus {
 pre {
 	white-space: pre-wrap;
 }
+table.feed-control td /*:nth-child(2), td:nth-child(3), td:nth-child(4)*/ {
+	font-family: monospace;
+	padding: 5px 10px;
+}

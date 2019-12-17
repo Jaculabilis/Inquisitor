@@ -42,10 +42,13 @@ def root():
 	total = 0
 	items, errors = loader.load_active_items()
 	active_items = []
-	active_tags = set()
+	active_tags = {}
 	for item in items:
 			if item['active']:
-				active_tags |= set(item['tags'])
+			for tag in item['tags']:
+				if tag not in active_tags: active_tags[tag] = 0
+				active_tags[tag] += 1
+			# active_tags |= set(item['tags'])
 				total += 1
 				if not any(map(lambda f: f(item), filters)):
 					active_items.append(item)
@@ -63,16 +66,28 @@ def root():
 
 	if total > 0:
 		# Create the feed control item
-		wl_minus = [make_query_link("only - {}".format(tag), [t for t in wl if t != tag], bl) for tag in wl]
-		wl_plus = [make_query_link("only + {}".format(tag), wl + [tag], bl) for tag in active_tags if tag not in wl]
-		bl_minus = [make_query_link("not - {}".format(tag), wl, [t for t in bl if t != tag]) for tag in bl]
-		bl_plus = [make_query_link("not + {}".format(tag), wl, bl + [tag]) for tag in active_tags if tag not in bl]
-		body = "<pre>{}</pre>".format("\n".join(wl_minus + wl_plus + bl_minus + bl_plus))
+		link_table = []
+		for tag, count in sorted(active_tags.items()):
+			links = [count]
+			links.append(make_query_link(tag, [tag], []))
+			if tag in wl:
+				new_wl = [t for t in wl if t != tag]
+				links.append(make_query_link("-only", new_wl, bl))
+			else:
+				new_bl = [t for t in bl if t != tag]
+				links.append(make_query_link("+only", wl + [tag], new_bl))
+			if tag in bl:
+				new_bl = [t for t in bl if t != tag]
+				links.append(make_query_link("-not", wl, new_bl))
+			else:
+				new_wl = [t for t in wl if t != tag]
+				links.append(make_query_link("+not", new_wl, bl + [tag]))
+			link_table.append("<tr><td>{0}</td><td>{1}</td><td>{2}</td><td>{3}</td></tr>".format(*links))
+		body = '<table class="feed-control">{}</table>'.format("\n".join(link_table))
 
 		feed_control = {
-			'title': 'Feed Control [{}]'.format(total),
+			'title': 'Feed Control [{}/{}]'.format(len(active_items), total),
 			'body': body,
-			'created': None,
 		}
 		active_items.insert(0, feed_control)
 

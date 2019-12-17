@@ -26,37 +26,25 @@
 			{% if items %}
 			{% for item in items %}
 			<div class="readable-item" id="{{item.source}}-{{item.id}}">
-				{% if item.id %}
-				<button onclick="javascript:deactivate('{{item.source}}', '{{item.id}}')">&#10005;</button>
-				{% endif %}
-				{% if item.link %}
-				<a class="item-link" href="{{item.link}}" target="_blank">&#8663;</a>
-				{% endif %}
-				{% if item.body %}
-				<details>
+				{% if item.id %}<button onclick="javascript:deactivate('{{item.source}}', '{{item.id}}')">&#10005;</button>{% endif %}
+				{% if item.link %}<a class="item-link" href="{{item.link}}" target="_blank">&#8663;</a>{% endif %}
+				{% if item.body %}<details>
 				<summary><span class="item-title">{{item.title}}</span></summary>
 				<p>{{item.body|safe}}</p>
 				</details>
-				{% else %}
-				<span class="item-title">{{item.title}}</span><br>
+				{% else %}<span class="item-title">{{item.title}}</span><br>
 				{% endif %}
-				{% if item.author or item.time %}
-				<span class="item-info">
-					{% if item.author %}
-					{{item.author}}
-					{% endif %}
-					{% if item.time %}
-					{{item.time|datetimeformat}}
-					{% endif %}
+				{% if item.author or item.time %}<span class="item-info">
+					{% if item.author %}{{item.author}}{% endif %}
+					{% if item.time %}{{item.time|datetimeformat}}{% endif %}
 				</span><br>
 				{% endif %}
-				<span class="item-info" title="{{ 'Tags: {}'.format(', '.join(item.tags)) }}">
-					{{item.source}}
-					{% if item.id %}
-					{{item.id}}
-					{% endif %}
-					{{item.created|datetimeformat}}
+				{% if item.source or item.id or item.created %}<span class="item-info" title="{{ 'Tags: {}'.format(', '.join(item.tags)) }}">
+					{% if item.source %}{{item.source}}{% endif %}
+					{% if item.id %}{{item.id}}{% endif %}
+					{% if item.created %}{{item.created|datetimeformat}}{% endif %}
 				</span>
+				{% endif %}
 			</div>
 			{% endfor %}
 			{% else %}
