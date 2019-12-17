@@ -116,7 +116,7 @@ def command_add(args):
 	if args.time: item['time'] = int(args.time)
 	if args.author: item['author'] = str(args.author)
 	if args.body: item['body'] = str(args.body)
-	if args.tags: item['tags'] = [str(tag) for tag in args.tags]
+	if args.tags: item['tags'] = [str(tag) for tag in args.tags.split(",")]
 	if args.ttl: item['ttl'] = int(args.ttl)
 	populate_new(item)
 
