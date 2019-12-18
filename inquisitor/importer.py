@@ -95,9 +95,9 @@ def update_source(source_name, fetch_new):
 			prior_item = prior_items[item['id']]
 			if prior_item['active']:
 				populate_old(prior_item, item)
-				# Remove the id from the list to track its continued presence
-				# in the source's queue of new items.
-				del prior_items[item['id']]
+			# Remove the id from the list to track its continued presence
+			# in the source's queue of new items.
+			del prior_items[item['id']]
 
 	# Any remaining extant items are considered old. Old items are removed
 	# when they are both inactive and past their ttl date.
