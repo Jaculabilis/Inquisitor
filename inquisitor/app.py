@@ -66,7 +66,8 @@ def root():
 
 	if total > 0:
 		# Create the feed control item
-		link_table = []
+		link_table = ["<tr><td>{0}</td><td>{1}</td><td></td><td></td></tr>".format(
+			total, make_query_link("all", [], []))]
 		for tag, count in sorted(active_tags.items()):
 			links = [count]
 			links.append(make_query_link(tag, [tag], []))
