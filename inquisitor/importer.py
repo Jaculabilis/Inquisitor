@@ -2,6 +2,7 @@ import os
 import traceback
 import importlib.util
 import json
+import sys
 
 import error
 from configs import SOURCES_PATH, DUNGEON_PATH, logger
@@ -9,6 +10,7 @@ import loader
 import timestamp
 
 def update_sources(*source_names):
+	sys.path.append(SOURCES_PATH)
 	for source_name in source_names:
 		try:
 			source_module = load_source(source_name)
