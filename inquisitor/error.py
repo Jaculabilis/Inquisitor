@@ -3,6 +3,7 @@ import logging
 import json
 import random
 
+import timestamp
 from configs import DUNGEON_PATH, logger
 
 logger = logging.getLogger("inquisitor")
@@ -14,7 +15,8 @@ def as_item(title, body=None):
 		'source': 'inquisitor',
 		'title': title,
 		'active': True,
-		'tags': ['inquisitor', 'error']
+		'created': timestamp.now(),
+		'tags': ['inquisitor', 'error'],
 	}
 	if body is not None:
 		item['body'] = '<pre>{}</pre>'.format(body)
