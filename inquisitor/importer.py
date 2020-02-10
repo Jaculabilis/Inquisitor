@@ -72,12 +72,15 @@ def update_source(source_name, fetch_new):
 	# Get the existing items.
 	prior_items, errors = loader.load_items(source_name)
 	logger.debug("Found {} prior items".format(len(prior_items)))
+	em = "Initial items: {}\n".format(" ".join(list(prior_items.keys())))
+	em += "Errors: {}\n".format(" ".join(errors))
 
 	# Get the new items.
 	state = loader.load_state(source_name)
 	new_items = fetch_new(state)
 	logger.debug("Fetched {} items".format(len(new_items)))
 	state.flush()
+	em += "New items: {}\n".format(" ".join([ni['id'] for ni in new_items]))
 
 	new_count = 0
 	del_count = 0
@@ -91,16 +94,21 @@ def update_source(source_name, fetch_new):
 			path = os.path.join(DUNGEON_PATH, item['source'], item['id'] + ".item")
 			with open(path, 'w', encoding="utf8") as f:
 				f.write(s)
+			em += "Initialized item {}\n".format(item['id'])
 
 		else:
 			# If the item is extant and still active, overwrite its values.
 			prior_item = prior_items[item['id']]
 			if prior_item['active']:
 				populate_old(prior_item, item)
+				em += "Updated item {}\n".format(item['id'])
 			# Remove the id from the list to track its continued presence
 			# in the source's queue of new items.
 			del prior_items[item['id']]
+			em += "Checked off item {}\n".format(item['id'])
 
+	em += "Remaining items: {}\n".format(" ".join(list(prior_items.keys())))
+	em += "ls dir: {}\n".format(" ".join(list(os.listdir(os.path.join(DUNGEON_PATH, source_name)))))
 	# Any remaining extant items are considered old. Old items are removed
 	# when they are both inactive and past their ttl date.
 	now = timestamp.now()
@@ -110,9 +118,17 @@ def update_source(source_name, fetch_new):
 		else:
 			ttl_date = 0
 		if not prior_item['active'] and ttl_date < now:
+			if em is not None: em += "Deleting item {}\n".format(prior_id)
 			del_count += 1
 			file_path = os.path.join(DUNGEON_PATH, prior_item['source'], prior_item['id'] + ".item")
-			os.remove(file_path)
+			try:
+				os.remove(file_path)
+			except:
+				if em is not None:
+					em += traceback.format_exc()
+					em += "ls dir: {}\n".format(list(os.listdir(os.path.join(DUNGEON_PATH, prior_item['source']))))
+					error.as_item("Failed to delete {}".format(file_path), em)
+					em = None
 
 	# Note update timestamp in state
 	state['last_updated'] = timestamp.now()
