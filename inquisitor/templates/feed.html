@@ -1,7 +1,36 @@
 <html>
 	<head>
 		<meta name="viewport" content="width=device-width, initial-scale=1">
-		<link rel="stylesheet" type="text/css" href="../feed.css" />
+		<style>
+			div#wrapper { max-width: 700px; margin: 0 auto; }
+			.readable-item {
+				border: 1px solid black; border-radius: 6px;
+				padding: 5px;
+				margin-bottom: 20px;
+				word-break: break-word;
+			}
+			.item-title { font-size: 1.4em; }
+			.readable-item button { font-size: 1em; float:right; }
+			.item-link {
+				text-decoration: none;
+				float:right;
+				margin: 0px 2px;
+				font-size: 1em;
+				padding: 2px 7px;
+				border: 1px solid;
+				border-radius: 2px;
+			}
+			.item-info { color: rgba(0, 0, 0, 0.7); }
+			.readable-item img { max-width: 100%; }
+			button, summary { cursor: pointer; }
+			summary:focus { outline: 1px dotted gray; }
+			.strikethru span, .strikethru p {
+				text-decoration: line-through;
+				color: rgba(0, 0, 0, 0.2);
+			}
+			pre { white-space: pre-wrap; }
+			table.feed-control td { font-family: monospace; padding: 5px 10px; }
+		</style>
 		<script>
 			var deactivate = function (source, itemid) {
 				fetch('deactivate/', {

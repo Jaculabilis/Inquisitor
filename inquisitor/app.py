@@ -102,4 +102,3 @@ def deactivate():
 	item = loader.WritethroughDict(os.path.join(DUNGEON_PATH, params['source'], params['itemid'] + '.item'))
 	item['active'] = False
 	return jsonify({'active': item['active']})
-
