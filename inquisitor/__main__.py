@@ -2,12 +2,12 @@
 import argparse
 
 # Application imports
-import cli
-import configs
+from inquisitor import cli
+from inquisitor import configs
 
 
 from signal import signal, SIGPIPE, SIG_DFL
-signal(SIGPIPE, SIG_DFL) 
+signal(SIGPIPE, SIG_DFL)
 
 
 def parse_args(valid_commands):

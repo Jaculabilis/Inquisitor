@@ -6,7 +6,7 @@ import os
 import random
 
 # Application imports
-from configs import logger, DUNGEON_PATH, SOURCES_PATH
+from inquisitor.configs import logger, DUNGEON_PATH, SOURCES_PATH
 
 
 def command_update(args):
@@ -30,7 +30,7 @@ def command_update(args):
 		logger.error("Couldn't find sources. Set INQUISITOR_SOURCES or cd to parent folder of ./sources")
 
 	# Update sources
-	from importer import update_sources
+	from inquisitor.importer import update_sources
 	update_sources(*args.source)
 	return 0
 
@@ -58,7 +58,7 @@ def command_deactivate(args):
 		return -1
 
 	# Deactivate all items in each source.
-	from loader import load_items
+	from inquisitor.loader import load_items
 	for source_name in args.source:
 		path = os.path.join(DUNGEON_PATH, source_name)
 		if not os.path.isdir(path):
@@ -112,7 +112,7 @@ def command_add(args):
 			logger.error("Source '{}' does not exist".format(source))
 			return -1
 
-	from importer import populate_new
+	from inquisitor.importer import populate_new
 	item = {
 		'id': '{:x}'.format(random.getrandbits(16 * 4)),
 		'source': 'inquisitor'
@@ -142,8 +142,8 @@ def command_feed(args):
 		return -1
 
 	import shutil
-	import loader
-	import timestamp
+	from inquisitor import loader
+	from inquisitor import timestamp
 
 	items, errors = loader.load_active_items()
 	if not items and not errors:
@@ -187,7 +187,7 @@ def command_feed(args):
 def command_run(args):
 	"""Run the default Flask server."""
 	try:
-		from app import app
+		from inquisitor.app import app
 		app.run()
 		return 0
 	except Exception as e:

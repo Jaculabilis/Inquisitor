@@ -3,8 +3,8 @@ import logging
 import json
 import random
 
-import timestamp
-from configs import DUNGEON_PATH, logger
+from inquisitor import timestamp
+from inquisitor.configs import DUNGEON_PATH, logger
 
 logger = logging.getLogger("inquisitor")
 

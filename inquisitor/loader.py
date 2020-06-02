@@ -1,8 +1,8 @@
 import os
 import json
 
-from configs import DUNGEON_PATH
-import error
+from inquisitor.configs import DUNGEON_PATH
+from inquisitor import error
 
 class WritethroughDict():
 	"""A wrapper for a dictionary saved to the disk."""

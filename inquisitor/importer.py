@@ -4,10 +4,8 @@ import importlib.util
 import json
 import sys
 
-import error
-from configs import SOURCES_PATH, DUNGEON_PATH, logger
-import loader
-import timestamp
+from inquisitor import loader, timestamp, error
+from inquisitor.configs import SOURCES_PATH, DUNGEON_PATH, logger
 
 def update_sources(*source_names):
 	sys.path.append(SOURCES_PATH)

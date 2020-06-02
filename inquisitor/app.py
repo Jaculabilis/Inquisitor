@@ -6,9 +6,8 @@ import traceback
 from flask import Flask, render_template, request, jsonify
 
 # Application imports
-from configs import logger, DUNGEON_PATH
-import loader
-import timestamp
+from inquisitor.configs import logger, DUNGEON_PATH
+from inquisitor import loader, timestamp
 
 # Globals
 app = Flask(__name__)
