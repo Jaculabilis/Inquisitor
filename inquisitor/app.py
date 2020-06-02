@@ -1,4 +1,5 @@
 # Standard library imports
+from datetime import datetime, timedelta
 import os
 import traceback
 
@@ -99,6 +100,22 @@ def deactivate():
 	params = request.get_json()
 	if 'source' not in params and 'itemid' not in params:
 		logger.error("Bad request params: {}".format(params))
-	item = loader.WritethroughDict(os.path.join(DUNGEON_PATH, params['source'], params['itemid'] + '.item'))
+	item = loader.WritethroughDict(os.path.join(
+		DUNGEON_PATH, params['source'], params['itemid'] + '.item'))
+	if item['active']:
+		logger.debug(f"Deactivating {params['source']}/{params['itemid']}")
 	item['active'] = False
 	return jsonify({'active': item['active']})
+
+@app.route("/punt/", methods=['POST'])
+def punt():
+	params = request.get_json()
+	if 'source' not in params and 'itemid' not in params:
+		logger.error("Bad request params: {}".format(params))
+	item = loader.WritethroughDict(os.path.join(
+		DUNGEON_PATH, params['source'], params['itemid'] + '.item'))
+	tomorrow = datetime.now() + timedelta(days=1)
+	morning = datetime(tomorrow.year, tomorrow.month, tomorrow.day, 6, 0, 0)
+	til_then = morning.timestamp() - item['created']
+	item['tts'] = til_then
+	return jsonify(item.item)

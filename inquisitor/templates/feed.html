@@ -10,11 +10,14 @@
 				word-break: break-word;
 			}
 			.item-title { font-size: 1.4em; }
-			.readable-item button { font-size: 1em; float:right; }
+			.readable-item button {
+				font-size: 1em;
+				float:right;
+				margin-left: 2px;
+			}
 			.item-link {
 				text-decoration: none;
 				float:right;
-				margin: 0px 2px;
 				font-size: 1em;
 				padding: 2px 7px;
 				border: 1px solid;
@@ -24,10 +27,8 @@
 			.readable-item img { max-width: 100%; }
 			button, summary { cursor: pointer; }
 			summary:focus { outline: 1px dotted gray; }
-			.strikethru span, .strikethru p {
-				text-decoration: line-through;
-				color: rgba(0, 0, 0, 0.2);
-			}
+			.strikethru span, .strikethru p { text-decoration: line-through; }
+			.fade span, .fade p { color: rgba(0, 0, 0, 0.2); }
 			pre { white-space: pre-wrap; }
 			table.feed-control td { font-family: monospace; padding: 5px 10px; }
 		</style>
@@ -44,10 +45,26 @@
 				.then(function (data) {
 					if (!data.active) {
 						document.getElementById(source + "-" + itemid)
-							.classList.add("strikethru")
+							.classList.add("strikethru", "fade");
 					}
 				});
-			}
+			};
+			var punt = function (source, itemid) {
+				fetch('punt/', {
+					method: 'POST',
+					headers: {
+						'Content-Type': 'application/json; charset=UTF-8',
+					},
+					body: JSON.stringify({source: source, itemid: itemid}),
+				})
+				.then(response => response.json())
+				.then(function (data) {
+					if (data.tts) {
+						document.getElementById(source + "-" + itemid)
+							.classList.add("fade");
+					}
+				});
+			};
 		</script>
 	</head>
 	<body>
@@ -55,7 +72,8 @@
 			{% if items %}
 			{% for item in items %}
 			<div class="readable-item" id="{{item.source}}-{{item.id}}">
-				{% if item.id %}<button onclick="javascript:deactivate('{{item.source}}', '{{item.id}}')">&#10005;</button>{% endif %}
+				{% if item.id %}<button onclick="javascript:deactivate('{{item.source}}', '{{item.id}}')" title="Deactivate">&#10005;</button>{% endif %}
+				{% if item.id %}<button onclick="javascript:punt('{{item.source}}', '{{item.id}}')" title="Punt to tomorrow">&#8631;</button>{% endif %}
 				{% if item.link %}<a class="item-link" href="{{item.link}}" target="_blank">&#8663;</a>{% endif %}
 				{% if item.body %}<details>
 				<summary><span class="item-title">{{item.title}}</span></summary>
@@ -72,6 +90,7 @@
 					{% if item.source %}{{item.source}}{% endif %}
 					{% if item.id %}{{item.id}}{% endif %}
 					{% if item.created %}{{item.created|datetimeformat}}{% endif %}
+					{% if item.ttl %}L{% endif %}{% if item.ttd %}D{% endif %}{% if item.tts %}S{% endif %}
 				</span>
 				{% endif %}
 			</div>
