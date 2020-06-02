@@ -145,6 +145,7 @@ def populate_new(source_name, item):
 	if 'id' not in item:
 		raise Exception(f'Source "{source_name}" returned an item with no id')
 	# source is auto-populated with the source name if missing
+	# Note: this allows sources to create items in other cells!
 	if 'source' not in item: item['source'] = source_name
 	# active is forced to True for new items
 	item['active'] = True
