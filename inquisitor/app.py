@@ -68,7 +68,7 @@ def root():
 		# Create the feed control item
 		link_table = ["<tr><td>{0}</td><td>{1}</td><td></td><td></td></tr>".format(
 			total, make_query_link("all", [], []))]
-		for tag, count in sorted(active_tags.items()):
+		for tag, count in sorted(active_tags.items(), key=lambda i: i[0].lower()):
 			links = [count]
 			links.append(make_query_link(tag, [tag], []))
 			if tag in wl:
