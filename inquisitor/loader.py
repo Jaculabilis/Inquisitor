@@ -3,6 +3,7 @@ import json
 
 from inquisitor.configs import DUNGEON_PATH
 from inquisitor import error
+from inquisitor import timestamp
 
 class WritethroughDict():
 	"""A wrapper for a dictionary saved to the disk."""
@@ -57,7 +58,7 @@ def load_items(source_name):
 				path = os.path.join(cell_path, filename)
 				item = WritethroughDict(path)
 				items[item['id']] = item
-			except Exception as e:
+			except Exception:
 				errors.append(filename)
 	return items, errors
 
@@ -67,6 +68,7 @@ def load_active_items():
 	"""
 	items = []
 	errors = []
+	now = timestamp.now()
 	for cell_name in os.listdir(DUNGEON_PATH):
 		cell_path = os.path.join(DUNGEON_PATH, cell_name)
 		for filename in os.listdir(cell_path):
@@ -74,8 +76,15 @@ def load_active_items():
 				try:
 					path = os.path.join(cell_path, filename)
 					item = WritethroughDict(path)
-					if item['active']:
-						items.append(item)
-				except Exception as e:
+					# The time-to-show field hides items until an expiry date.
+					if 'tts' in item:
+						tts_date = item['created'] + item['tts']
+						if now < tts_date:
+							continue
+					# Don't show inactive items
+					if not item['active']:
+						continue
+					items.append(item)
+				except Exception:
 					errors.append(filename)
 	return items, errors
