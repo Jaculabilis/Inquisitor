@@ -44,6 +44,10 @@ def command_deactivate(args):
 	parser.add_argument("source",
 		nargs="*",
 		help="Cells to deactivate.")
+	parser.add_argument("--tag",
+		help="Only deactivate items with this tag")
+	parser.add_argument("--title",
+		help="Only deactivate items with titles containing this substring")
 	args = parser.parse_args(args)
 
 	if len(args.source) == 0:
@@ -62,6 +66,10 @@ def command_deactivate(args):
 		count = 0
 		items, _ = load_items(source_name)
 		for item in items.values():
+			if args.tag and args.tag not in item['tags']:
+				continue
+			if args.title and args.title not in item['title']:
+				continue
 			if item['active']:
 				item['active'] = False
 				count += 1
