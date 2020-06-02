@@ -6,6 +6,10 @@ import cli
 import configs
 
 
+from signal import signal, SIGPIPE, SIG_DFL
+signal(SIGPIPE, SIG_DFL) 
+
+
 def parse_args(valid_commands):
 	command_descs = "\n".join([
 		"- {0}: {1}".format(name, func.__doc__)
