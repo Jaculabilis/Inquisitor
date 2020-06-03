@@ -108,6 +108,7 @@
 				{% endif %}
 			</div>
 			{% endfor %}
+			{% if items %}
 			<div class="readable-item">
 				<details>
 				<summary><span class="item-title">Feed Management</span></summary>
@@ -116,6 +117,7 @@
 				</div>
 				</details>
 			</div>
+			{% endif %}
 			{% else %}
 			<div class="readable-item">
 				<span class="item-title">Feed is empty</span>
