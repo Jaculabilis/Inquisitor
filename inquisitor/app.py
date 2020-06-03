@@ -92,8 +92,14 @@ def root():
 		}
 		active_items.insert(0, feed_control)
 
-	return render_template("feed.html", items=active_items[:100])
+	selection = active_items[:100]
 
+	return render_template("feed.html",
+		items=selection,
+		mdeac=[
+			{'source': item['source'], 'itemid': item['id']}
+			for item in selection
+			if 'id' in item])
 
 @app.route("/deactivate/", methods=['POST'])
 def deactivate():
@@ -119,3 +125,18 @@ def punt():
 	til_then = morning.timestamp() - item['created']
 	item['tts'] = til_then
 	return jsonify(item.item)
+
+@app.route("/mass-deactivate/", methods=['POST'])
+def mass_deactivate():
+	params = request.get_json()
+	if 'items' not in params:
+		logger.error("Bad request params: {}".format(params))
+	for info in params.get('items', []):
+		source = info['source']
+		itemid = info['itemid']
+		item = loader.WritethroughDict(os.path.join(
+			DUNGEON_PATH, source, itemid + ".item"))
+		if item['active']:
+			logger.debug(f"Deactivating {info['source']}/{info['itemid']}")
+		item['active'] = False
+	return jsonify({})

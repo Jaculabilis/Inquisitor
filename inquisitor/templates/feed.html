@@ -10,7 +10,7 @@
 				word-break: break-word;
 			}
 			.item-title { font-size: 1.4em; }
-			.readable-item button {
+			.item-button {
 				font-size: 1em;
 				float:right;
 				margin-left: 2px;
@@ -65,6 +65,19 @@
 					}
 				});
 			};
+			var mdeactivate = function (items) {
+				fetch('mass-deactivate/', {
+					method: 'POST',
+					headers: {
+						'Content-Type': 'application/json; charset=UTF-8',
+					},
+					body: JSON.stringify({items: items}),
+				})
+				.then(response => response.json())
+				.then(function () {
+					location.reload()
+				});
+			};
 		</script>
 	</head>
 	<body>
@@ -72,8 +85,8 @@
 			{% if items %}
 			{% for item in items %}
 			<div class="readable-item" id="{{item.source}}-{{item.id}}">
-				{% if item.id %}<button onclick="javascript:deactivate('{{item.source}}', '{{item.id}}')" title="Deactivate">&#10005;</button>{% endif %}
-				{% if item.id %}<button onclick="javascript:punt('{{item.source}}', '{{item.id}}')" title="Punt to tomorrow">&#8631;</button>{% endif %}
+				{% if item.id %}<button class="item-button" onclick="javascript:deactivate('{{item.source}}', '{{item.id}}')" title="Deactivate">&#10005;</button>{% endif %}
+				{% if item.id %}<button class="item-button" onclick="javascript:punt('{{item.source}}', '{{item.id}}')" title="Punt to tomorrow">&#8631;</button>{% endif %}
 				{% if item.link %}<a class="item-link" href="{{item.link}}" target="_blank">&#8663;</a>{% endif %}
 				{% if item.body %}<details>
 				<summary><span class="item-title">{{item.title}}</span></summary>
@@ -95,6 +108,14 @@
 				{% endif %}
 			</div>
 			{% endfor %}
+			<div class="readable-item">
+				<details>
+				<summary><span class="item-title">Feed Management</span></summary>
+				<div style="text-align:center;">
+				<button style="font-size: 1.4em;" onclick="javascript:mdeactivate({{ mdeac|safe }})">Deactivate All</button>
+				</div>
+				</details>
+			</div>
 			{% else %}
 			<div class="readable-item">
 				<span class="item-title">Feed is empty</span>
