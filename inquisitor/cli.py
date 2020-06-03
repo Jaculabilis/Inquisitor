@@ -93,6 +93,8 @@ def command_add(args):
 	parser.add_argument("--body", help="HTML")
 	parser.add_argument("--tags", help="Comma-separated list")
 	parser.add_argument("--ttl", type=int, help="Cleanup protection in seconds")
+	parser.add_argument("--ttd", type=int, help="Cleanup force in seconds")
+	parser.add_argument("--tts", type=int, help="Display delay in seconds")
 	parser.add_argument("--create", action="store_true", help="Create source if it doesn't exist")
 	args = parser.parse_args(args)
 
@@ -108,6 +110,9 @@ def command_add(args):
 	if not os.path.isdir(cell_path):
 		if args.create:
 			os.mkdir(cell_path)
+			state_path = os.path.join(cell_path, "state")
+			with open(state_path, 'w', encoding='utf8') as f:
+				f.write(json.dumps({}))
 		else:
 			logger.error("Source '{}' does not exist".format(source))
 			return -1
@@ -126,7 +131,9 @@ def command_add(args):
 	if args.body: item['body'] = str(args.body)
 	if args.tags: item['tags'] = [str(tag) for tag in args.tags.split(",")]
 	if args.ttl: item['ttl'] = int(args.ttl)
-	populate_new(item)
+	if args.ttd: item['ttd'] = int(args.ttd)
+	if args.tts: item['tts'] = int(args.tts)
+	populate_new(item['source'], item)
 
 	s = json.dumps(item, indent=2)
 	path = os.path.join(DUNGEON_PATH, item['source'], item['id'] + '.item')
