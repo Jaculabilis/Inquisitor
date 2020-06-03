@@ -53,7 +53,7 @@ def root():
 			if not any(map(lambda f: f(item), filters)):
 				active_items.append(item)
 	# Sort items by time
-	active_items.sort(key=lambda i: i.get('time', i.get('created', 0)))
+	active_items.sort(key=lambda i: i.item.get('time', i.item.get('created', 0)))
 
 	logger.info("Returning {} of {} items".format(len(active_items), total))
 	if errors:
