@@ -12,9 +12,10 @@ def fetch_new(state):
 		'id': itemid,
 		'title': f"Callback demo",
 		'body': 'No callbacks',
-		'callback': { 'id': itemid }
+		'callback': { 'count': 0 }
 	}
 	return [item]
 
 def callback(state, item):
-	item['body'] = f"Last callback at {datetime.now()}"
+	item['callback']['count'] += 1
+	item['body'] = f"Last callback at {datetime.now()}, {item['callback']['count']} total callbacks"
