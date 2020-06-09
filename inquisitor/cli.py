@@ -193,9 +193,16 @@ def command_feed(args):
 
 def command_run(args):
 	"""Run the default Flask server."""
+	parser = argparse.ArgumentParser(
+		prog="inquisitor run",
+		description=command_run.__doc__,
+		add_help=False)
+	parser.add_argument("--debug", action="store_true")
+	args = parser.parse_args(args)
+
 	try:
 		from inquisitor.app import app
-		app.run()
+		app.run(debug=args.debug)
 		return 0
 	except Exception as e:
 		logger.error(e)
