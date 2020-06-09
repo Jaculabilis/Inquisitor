@@ -2,6 +2,7 @@
 Demonstrates the behavior of the callback field.
 """
 # Standard library imports
+from datetime import datetime
 import random
 
 def fetch_new(state):
@@ -16,4 +17,4 @@ def fetch_new(state):
 	return [item]
 
 def callback(state, item):
-	print(item)
+	item['body'] = f"Last callback at {datetime.now()}"

@@ -43,22 +43,23 @@ def load_source(source_name):
 	"""
 	# Push the sources directory
 	cwd = os.getcwd()
-	os.chdir(SOURCES_PATH)
-	# Check if the named source is present.
-	source_file_name = source_name + ".py"
-	if not os.path.isfile(source_file_name):
+	try:
+		os.chdir(SOURCES_PATH)
+		# Check if the named source is present.
+		source_file_name = source_name + ".py"
+		if not os.path.isfile(source_file_name):
+			raise FileNotFoundError("Missing '{}' in '{}'".format(source_name, SOURCES_PATH))
+		# Try to import the source module.
+		logger.debug("Loading module {}".format(source_file_name))
+		spec = importlib.util.spec_from_file_location("itemsource", source_file_name)
+		itemsource = importlib.util.module_from_spec(spec)
+		spec.loader.exec_module(itemsource)
+		if not hasattr(itemsource, 'fetch_new'):
+			raise ImportError("Missing fetch_new in '{}'".format(source_file_name))
+		# Since the source is valid, get or create the source cell.
+		return itemsource
+	finally:
 		os.chdir(cwd)
-		raise FileNotFoundError("Missing '{}' in '{}'".format(source_name, SOURCES_PATH))
-	# Try to import the source module.
-	logger.debug("Loading module {}".format(source_file_name))
-	spec = importlib.util.spec_from_file_location("itemsource", source_file_name)
-	itemsource = importlib.util.module_from_spec(spec)
-	spec.loader.exec_module(itemsource)
-	if not hasattr(itemsource, 'fetch_new'):
-		raise ImportError("Missing fetch_new in '{}'".format(source_file_name))
-	# Since the source is valid, get or create the source cell.
-	os.chdir(cwd)
-	return itemsource
 
 def update_source(source_name, fetch_new):
 	"""
@@ -169,3 +170,20 @@ def populate_old(prior, new):
 	if 'ttd' in new: prior['ttd'] = new['ttd']
 	if 'tts' in new: prior['tts'] = new['tts']
 	if 'callback' in new: prior['callback'] = new['callback']
+
+def item_callback(source_name, itemid):
+	try:
+		# Load the module with the callback function
+		source_module = load_source(source_name)
+		if not hasattr(source_module, 'callback'):
+			raise ImportError(f"Missing callback in '{source_name}'")
+		# Load the source state and the origin item
+		state = loader.load_state(source_name)
+		item = loader.WritethroughDict(os.path.join(DUNGEON_PATH, source_name, itemid + ".item"))
+		# Execute callback
+		source_module.callback(state, item)
+		# Save any changes
+		item.flush()
+		state.flush()
+	except Exception:
+		error.as_item(f"Error executing callback for {source_name}/{itemid}", traceback.format_exc())
