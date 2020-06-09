@@ -140,3 +140,10 @@ def mass_deactivate():
 			logger.debug(f"Deactivating {info['source']}/{info['itemid']}")
 		item['active'] = False
 	return jsonify({})
+
+@app.route("/callback/", methods=['POST'])
+def callback():
+	params = request.get_json()
+	if 'source' not in params and 'itemid' not in params:
+		logger.error("Bad request params: {}".format(params))
+	return jsonify({})

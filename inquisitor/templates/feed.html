@@ -73,8 +73,19 @@
 					},
 					body: JSON.stringify({items: items}),
 				})
-				.then(response => response.json())
 				.then(function () {
+					location.reload()
+				});
+			};
+			var callback = function (source, itemid) {
+				fetch('callback/', {
+					method: 'POST',
+					headers: {
+						'Content-Type': 'application/json; charset=UTF-8',
+					},
+					body: JSON.stringify({source: source, itemid: itemid}),
+				})
+				.then(function (data) {
 					location.reload()
 				});
 			};
@@ -88,9 +99,14 @@
 				{% if item.id %}<button class="item-button" onclick="javascript:deactivate('{{item.source}}', '{{item.id}}')" title="Deactivate">&#10005;</button>{% endif %}
 				{% if item.id %}<button class="item-button" onclick="javascript:punt('{{item.source}}', '{{item.id}}')" title="Punt to tomorrow">&#8631;</button>{% endif %}
 				{% if item.link %}<a class="item-link" href="{{item.link}}" target="_blank">&#8663;</a>{% endif %}
-				{% if item.body %}<details>
+				{% if item.body or item.callback %}<details>
 				<summary><span class="item-title">{{item.title}}</span></summary>
+				{% if item.body %}
 				<p>{{item.body|safe}}</p>
+				{% endif %}
+				{% if item.callback %}
+				<p><button onclick="javascript:callback('{{item.source}}', '{{item.id}}')">Callback</button></p>
+				{% endif %}
 				</details>
 				{% else %}<span class="item-title">{{item.title}}</span><br>
 				{% endif %}

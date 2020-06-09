@@ -155,7 +155,7 @@ def populate_new(source_name, item):
 	if 'title' not in item: item['title'] = item['id']
 	# tags is auto-populated if missing (not if empty!)
 	if 'tags' not in item: item['tags'] = [source_name]
-	# link, time, author, body, ttl, ttd, and tts are optional
+	# link, time, author, body, ttl, ttd, tts, callback are optional
 
 def populate_old(prior, new):
 	# Not updated: id, source, active, created
@@ -168,3 +168,4 @@ def populate_old(prior, new):
 	if 'ttl' in new: prior['ttl'] = new['ttl']
 	if 'ttd' in new: prior['ttd'] = new['ttd']
 	if 'tts' in new: prior['tts'] = new['tts']
+	if 'callback' in new: prior['callback'] = new['callback']
