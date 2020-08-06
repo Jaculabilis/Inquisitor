@@ -30,7 +30,7 @@ def command_update(args):
 		logger.error("Couldn't find sources. Set INQUISITOR_SOURCES or cd to parent folder of ./sources")
 
 	# Update sources
-	from inquisitor.importer import update_sources
+	from inquisitor.sources import update_sources
 	update_sources(*args.source)
 	return 0
 
@@ -117,7 +117,7 @@ def command_add(args):
 			logger.error("Source '{}' does not exist".format(source))
 			return -1
 
-	from inquisitor.importer import populate_new
+	from inquisitor.sources import populate_new
 	item = {
 		'id': '{:x}'.format(random.getrandbits(16 * 4)),
 		'source': 'inquisitor'

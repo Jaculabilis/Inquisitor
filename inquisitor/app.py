@@ -8,7 +8,7 @@ from flask import Flask, render_template, request, jsonify
 
 # Application imports
 from inquisitor.configs import logger, DUNGEON_PATH
-from inquisitor import importer, loader, timestamp
+from inquisitor import sources, loader, timestamp
 
 # Globals
 app = Flask(__name__)
@@ -146,5 +146,5 @@ def callback():
 	params = request.get_json()
 	if 'source' not in params and 'itemid' not in params:
 		logger.error("Bad request params: {}".format(params))
-	importer.item_callback(params['source'], params['itemid'])
+	sources.item_callback(params['source'], params['itemid'])
 	return jsonify({})
