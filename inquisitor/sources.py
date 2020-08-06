@@ -208,7 +208,7 @@ def item_callback(source_name, itemid):
 			raise ImportError(f"Missing callback in '{source_name}'")
 		# Load the source state and the origin item
 		state = loader.load_state(source_name)
-		item = loader.WritethroughDict(os.path.join(DUNGEON_PATH, source_name, itemid + ".item"))
+		item = loader.load_item(source_name, itemid)
 		# Execute callback
 		source_module.callback(state, item)
 		# Save any changes

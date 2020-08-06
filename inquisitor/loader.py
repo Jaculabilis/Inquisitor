@@ -1,18 +1,42 @@
 import os
 import json
 
+
 from inquisitor.configs import DUNGEON_PATH
 from inquisitor import error
 from inquisitor import timestamp
 
+
 class WritethroughDict():
-	"""A wrapper for a dictionary saved to the disk."""
-	def __init__(self, path):
+	"""A wrapper for a dictionary saved to the file system."""
+
+	@staticmethod
+	def create(path, item):
+		"""
+		Creates a writethrough dictionary from a dictionary in memory and
+		initializes a file to save it.
+		"""
+		if os.path.isfile(path):
+			raise FileExistsError(path)
+		wd = WritethroughDict(path, item)
+		wd.flush()
+		return wd
+
+	@staticmethod
+	def load(path):
+		"""
+		Creates a writethrough dictionary from an existing file in the
+		file system.
+		"""
 		if not os.path.isfile(path):
 			raise FileNotFoundError(path)
-		self.path = path
 		with open(path) as f:
-			self.item = json.loads(f.read())
+			item = json.load(f)
+		return WritethroughDict(path, item)
+
+	def __init__(self, path, item):
+		self.path = path
+		self.item = item
 
 	def __getitem__(self, key):
 		return self.item[key]
@@ -40,10 +64,17 @@ class WritethroughDict():
 		with open(self.path, 'w', encoding="utf8") as f:
 			f.write(s)
 
+
 def load_state(source_name):
 	"""Loads the state dictionary for a source."""
 	state_path = os.path.join(DUNGEON_PATH, source_name, "state")
-	return WritethroughDict(state_path)
+	return WritethroughDict.load(state_path)
+
+
+def load_item(source_name, item_id):
+	"""Loads an item from a source."""
+	item_path = os.path.join(DUNGEON_PATH, source_name, f'{item_id}.item')
+	return WritethroughDict.load(item_path)
 
 def load_items(source_name):
 	"""
@@ -55,8 +86,7 @@ def load_items(source_name):
 	for filename in os.listdir(cell_path):
 		if filename.endswith('.item'):
 			try:
-				path = os.path.join(cell_path, filename)
-				item = WritethroughDict(path)
+				item = load_item(source_name, filename[:-5])
 				items[item['id']] = item
 			except Exception:
 				errors.append(filename)
@@ -74,8 +104,7 @@ def load_active_items():
 		for filename in os.listdir(cell_path):
 			if filename.endswith('.item'):
 				try:
-					path = os.path.join(cell_path, filename)
-					item = WritethroughDict(path)
+					item = load_item(cell_name, filename[:-5])
 					# The time-to-show field hides items until an expiry date.
 					if 'tts' in item:
 						tts_date = item['created'] + item['tts']

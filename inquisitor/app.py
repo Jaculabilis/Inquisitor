@@ -106,8 +106,7 @@ def deactivate():
 	params = request.get_json()
 	if 'source' not in params and 'itemid' not in params:
 		logger.error("Bad request params: {}".format(params))
-	item = loader.WritethroughDict(os.path.join(
-		DUNGEON_PATH, params['source'], params['itemid'] + '.item'))
+	item = loader.load_item(params['source'], params['itemid'])
 	if item['active']:
 		logger.debug(f"Deactivating {params['source']}/{params['itemid']}")
 	item['active'] = False
@@ -118,8 +117,7 @@ def punt():
 	params = request.get_json()
 	if 'source' not in params and 'itemid' not in params:
 		logger.error("Bad request params: {}".format(params))
-	item = loader.WritethroughDict(os.path.join(
-		DUNGEON_PATH, params['source'], params['itemid'] + '.item'))
+	item = loader.load_item(params['source'], params['itemid'])
 	tomorrow = datetime.now() + timedelta(days=1)
 	morning = datetime(tomorrow.year, tomorrow.month, tomorrow.day, 6, 0, 0)
 	til_then = morning.timestamp() - item['created']
@@ -134,8 +132,7 @@ def mass_deactivate():
 	for info in params.get('items', []):
 		source = info['source']
 		itemid = info['itemid']
-		item = loader.WritethroughDict(os.path.join(
-			DUNGEON_PATH, source, itemid + ".item"))
+		item = loader.load_item(source, itemid)
 		if item['active']:
 			logger.debug(f"Deactivating {info['source']}/{info['itemid']}")
 		item['active'] = False
