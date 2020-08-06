@@ -4,62 +4,89 @@ import importlib.util
 import json
 import sys
 
+
 from inquisitor import loader, timestamp, error
 from inquisitor.configs import SOURCES_PATH, DUNGEON_PATH, logger
 
+
+def ensure_cell(name):
+	"""
+	Creates a cell in the dungeon. Idempotent.
+	"""
+	cell_path = os.path.join(DUNGEON_PATH, name)
+	if not os.path.isdir(cell_path):
+		logger.info(f'Creating cell for source "{name}"')
+		os.mkdir(cell_path)
+	state_path = os.path.join(cell_path, 'state')
+	if not os.path.isfile(state_path):
+		with open(state_path, 'w', encoding='utf8') as state:
+			json.dump({}, state)
+
+
 def update_sources(*source_names):
-	sys.path.append(SOURCES_PATH)
+	"""
+	Attempts to update each given source.
+	"""
 	for source_name in source_names:
+		# Import the source
 		try:
 			source_module = load_source(source_name)
 		except Exception:
-			error.as_item("Error importing source '{}'".format(source_name), traceback.format_exc())
+			error.as_item(
+				f'Error importing source "{source_name}"',
+				traceback.format_exc())
 			continue
 
-		cell_path = os.path.join(DUNGEON_PATH, source_name)
-		if not os.path.isdir(cell_path):
-			try:
-				logger.info("Creating cell for source '{}'".format(source_name))
-				os.mkdir(cell_path)
-				state_path = os.path.join(cell_path, "state")
-				with open(state_path, 'w', encoding='utf8') as f:
-					f.write(json.dumps({}))
-			except Exception:
-				error.as_item("Error initializing source '{}'".format(source_name), traceback.format_exc())
-				continue
-
+		# If it doesn't have a cell yet, create one
 		try:
-			logger.info("Updating source '{}'".format(source_name))
-			new_count, del_count = update_source(source_name, source_module.fetch_new)
-			logger.info("{} new item{}, {} deleted item{}".format(
-				new_count, "s" if new_count != 1 else "",
-				del_count, "s" if del_count != 1 else ""))
+			ensure_cell(source_name)
 		except Exception:
-			error.as_item("Error updating source '{}'".format(source_name), traceback.format_exc())
+			error.as_item(
+				f'Error initializing source "{source_name}"',
+				traceback.format_exc())
+			continue
+
+		# Update the source
+		try:
+			logger.info(f'Updating source "{source_name}"')
+			update_source(source_name, source_module.fetch_new)
+		except Exception:
+			error.as_item(
+				f'Error updating source "{source_name}"',
+				traceback.format_exc())
+
 
 def load_source(source_name):
 	"""
-	Attempts to load the source module with the given name. Raises an exception on failure.
+	Attempts to load the source module with the given name.
+	Raises an exception on failure.
 	"""
-	# Push the sources directory
+	# Push the sources directory.
 	cwd = os.getcwd()
 	try:
 		os.chdir(SOURCES_PATH)
+
 		# Check if the named source is present.
-		source_file_name = source_name + ".py"
+		source_file_name = source_name + '.py'
 		if not os.path.isfile(source_file_name):
-			raise FileNotFoundError("Missing '{}' in '{}'".format(source_name, SOURCES_PATH))
-		# Try to import the source module.
-		logger.debug("Loading module {}".format(source_file_name))
+			raise FileNotFoundError('Missing "{source_name}" in "{SOURCES_PATH}"')
+
+		# Import the source module by file path.
+		logger.debug('Loading module "{source_file_name}"')
 		spec = importlib.util.spec_from_file_location("itemsource", source_file_name)
 		itemsource = importlib.util.module_from_spec(spec)
 		spec.loader.exec_module(itemsource)
+		itemsource = importlib.import_module(source_name)
+
+		# Require fetch_new().
 		if not hasattr(itemsource, 'fetch_new'):
-			raise ImportError("Missing fetch_new in '{}'".format(source_file_name))
-		# Since the source is valid, get or create the source cell.
+			raise ImportError('Missing fetch_new in "{source_file_name}"')
+
 		return itemsource
+
 	finally:
 		os.chdir(cwd)
+
 
 def update_source(source_name, fetch_new):
 	"""
@@ -138,8 +165,10 @@ def update_source(source_name, fetch_new):
 	# Note update timestamp in state
 	state['last_updated'] = timestamp.now()
 
-	# Return counts
-	return len(new_items), del_count
+	# Log counts
+	logger.info("{} new item{}, {} deleted item{}".format(
+		len(new_items), "s" if len(new_items) != 1 else "",
+		del_count, "s" if del_count != 1 else ""))
 
 def populate_new(source_name, item):
 	# id is required
