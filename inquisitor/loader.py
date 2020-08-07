@@ -41,6 +41,9 @@ class WritethroughDict():
 	def __getitem__(self, key):
 		return self.item[key]
 
+	def get(self, *args, **kwargs):
+		return self.item.get(*args, **kwargs)
+
 	def __setitem__(self, key, value):
 		self.item[key] = value
 		self.flush()

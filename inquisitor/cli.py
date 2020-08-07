@@ -150,8 +150,7 @@ def command_feed(args):
 
 	if errors:
 		items.insert(0, {
-			'id': 'read-errors',
-			'title': '{} read errors'.format(len(errors)),
+			'title': '{} read errors: {}'.format(len(errors), ' '.join(errors)),
 			'body': "\n".join(errors)
 		})
 
@@ -176,7 +175,7 @@ def command_feed(args):
 		print("| {0:<{1}} |".format(info1, width - 4))
 		created = timestamp.stamp_to_readable(item['created']) if 'created' in item else ""
 		info2 = "{0}  {1}  {2}".format(
-			item['source'], item['id'], created)
+			item.get('source', ''), item.get('id', ''), created)
 		print("| {0:<{1}} |".format(info2, width - 4))
 		print('+' + (width - 2) * '-' + '+')
 		print()

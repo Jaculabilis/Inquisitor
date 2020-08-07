@@ -62,7 +62,7 @@ def update_sources(*source_names):
 		# Update the source
 		try:
 			logger.info(f'Updating source "{source_name}"')
-			update_source(source_name, source_module.fetch_new)
+			update_source(source_name, source_module)
 		except Exception:
 			error.as_item(
 				f'Error updating source "{source_name}"',
@@ -101,7 +101,7 @@ def load_source(source_name):
 		os.chdir(cwd)
 
 
-def update_source(source_name, fetch_new):
+def update_source(source_name, source):
 	"""
 	Attempts to update the given source. Raises an exception if the source does.
 	"""
@@ -111,7 +111,7 @@ def update_source(source_name, fetch_new):
 
 	# Get the feed items from the source's fetch method.
 	state = loader.load_state(source_name)
-	fetched = fetch_new(state)
+	fetched = source.fetch_new(state)
 	state.flush()
 	logger.debug(f'Fetched {len(fetched)} items')
 	fetched_items = {item['id']: item for item in fetched}
@@ -130,9 +130,12 @@ def update_source(source_name, fetch_new):
 			new_items.append(item)
 
 	# Write all the new items to the source's cell.
+	has_create_handler = hasattr(source, 'on_create')
 	for item in new_items:
 		item_source = item.get('source', source_name)
-		loader.new_item(item_source, item)
+		created_item = loader.new_item(item_source, item)
+		if has_create_handler:
+			source.on_create(state, created_item)
 
 	# Update the other items using the fetched items' values.
 	for new_item in updated_items:
@@ -152,6 +155,7 @@ def update_source(source_name, fetch_new):
 	# fetch) and inactive. Some item fields can change this basic behavior.
 	del_count = 0
 	now = timestamp.now()
+	has_delete_handler = hasattr(source, 'on_delete')
 	fetched_ids = [item['id'] for item in updated_items]
 	old_item_ids = [
 		item_id for item_id in prior_ids
@@ -173,6 +177,8 @@ def update_source(source_name, fetch_new):
 				remove = True
 		# Items to be removed are deleted
 		if remove:
+			if has_delete_handler:
+				source.on_delete(state, item)
 			del_count += 1
 			file_path = os.path.join(DUNGEON_PATH, item['source'], item['id'] + ".item")
 			try:
