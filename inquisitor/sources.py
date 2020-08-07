@@ -9,6 +9,19 @@ from inquisitor import loader, timestamp, error
 from inquisitor.configs import SOURCES_PATH, DUNGEON_PATH, logger
 
 
+USE_NEWEST = (
+	'title',
+	'tags',
+	'link',
+	'time'
+	'author',
+	'body',
+	'ttl',
+	'ttd',
+	'tts',
+)
+
+
 def ensure_cell(name):
 	"""
 	Creates a cell in the dungeon. Idempotent.
@@ -92,54 +105,59 @@ def update_source(source_name, fetch_new):
 	"""
 	Attempts to update the given source. Raises an exception if the source does.
 	"""
-	# Get the existing items from the source's cell.
-	prior_items, errors = loader.load_items(source_name)
-	if any(errors):
-		raise Exception(f'Can\'t update source "{source_name}", some items are corrupt')
-	logger.debug("Found {} prior items".format(len(prior_items)))
+	# Get a list of item ids that already existed in this source's cell.
+	prior_ids = loader.get_item_ids(source_name)
+	logger.debug(f'Found {len(prior_ids)} prior items')
 
 	# Get the feed items from the source's fetch method.
 	state = loader.load_state(source_name)
 	fetched = fetch_new(state)
-	fetched_items = {item['id']: item for item in fetched}
 	state.flush()
+	logger.debug(f'Fetched {len(fetched)} items')
+	fetched_items = {item['id']: item for item in fetched}
 
-	# Populate all the fetched items with required or auto-generated fields.
-	# This also provides an opportunity to throw if the source isn't returning
-	# valid items.
-	for item in fetched_items.values():
-		populate_new(source_name, item)
-	logger.debug("Fetched {} items".format(len(fetched_items)))
+	# Determine which items are new and which are updates.
+	# We query the file system here instead of checking against this source's
+	# item ids from above because sources are allowed to generate in other
+	# sources' cells.
+	new_items = []
+	updated_items = []
+	for item in fetched:
+		item_source = item.get('source', source_name)
+		if loader.item_exists(item_source, item['id']):
+			updated_items.append(item)
+		else:
+			new_items.append(item)
 
-	# Write all the new fetched items to the source's cell.
-	new_items = [
-		item for item in fetched_items.values()
-		if item['id'] not in prior_items]
+	# Write all the new items to the source's cell.
 	for item in new_items:
-		s = json.dumps(item)
-		path = os.path.join(DUNGEON_PATH, item['source'], item['id'] + ".item")
-		with open(path, 'w', encoding='utf8') as f:
-			f.write(s)
+		item_source = item.get('source', source_name)
+		loader.new_item(item_source, item)
 
-	# Update the extant items using the fetched item's values.
-	extant_items = [
-		item for item in fetched_items.values()
-		if item['id'] in prior_items]
-	for item in extant_items:
-		# The items in prior_items are writethrough dicts.
-		prior_item = prior_items[item['id']]
-		# Only bother updating active items.
-		if prior_item['active']:
-			populate_old(prior_item, item)
+	# Update the other items using the fetched items' values.
+	for new_item in updated_items:
+		old_item = loader.load_item(new_item['source'], new_item['id'])
+		for field in USE_NEWEST:
+			if field in new_item and old_item[field] != new_item[field]:
+				old_item[field] = new_item[field]
+		if 'callback' in new_item:
+			old_callback = old_item.get('callback', {})
+			# Because of the way this update happens, any fields that are set
+			# in the callback when the item is new will keep their original
+			# values, as those values reappear in new_item on subsequent
+			# updates.
+			old_item['callback'] = {**old_item['callback'], **new_item['callback']}
 
 	# In general, items are removed when they are old (not found in the last
 	# fetch) and inactive. Some item fields can change this basic behavior.
 	del_count = 0
 	now = timestamp.now()
-	old_items = [
-		item for item in prior_items.values()
-		if item['id'] not in fetched_items]
-	for item in old_items:
+	fetched_ids = [item['id'] for item in updated_items]
+	old_item_ids = [
+		item_id for item_id in prior_ids
+		if item_id not in fetched_ids]
+	for item_id in old_item_ids:
+		item = loader.load_item(source_name, item_id)
 		remove = not item['active']
 		# The time-to-live field protects an item from removal until expiry.
 		# This is mainly used to avoid old items resurfacing when their source
@@ -170,35 +188,6 @@ def update_source(source_name, fetch_new):
 		len(new_items), "s" if len(new_items) != 1 else "",
 		del_count, "s" if del_count != 1 else ""))
 
-def populate_new(source_name, item):
-	# id is required
-	if 'id' not in item:
-		raise Exception(f'Source "{source_name}" returned an item with no id')
-	# source is auto-populated with the source name if missing
-	# Note: this allows sources to create items in other cells!
-	if 'source' not in item: item['source'] = source_name
-	# active is forced to True for new items
-	item['active'] = True
-	# created is forced to the current timestamp
-	item['created'] = timestamp.now()
-	# title is auto-populated with the id if missing
-	if 'title' not in item: item['title'] = item['id']
-	# tags is auto-populated if missing (not if empty!)
-	if 'tags' not in item: item['tags'] = [source_name]
-	# link, time, author, body, ttl, ttd, tts, callback are optional
-
-def populate_old(prior, new):
-	# Not updated: id, source, active, created
-	if 'title' in new: prior['title'] = new['title']
-	if 'tags' in new: prior['tags'] = new['tags']
-	if 'link' in new: prior['link'] = new['link']
-	if 'time' in new: prior['time'] = new['time']
-	if 'author' in new: prior['author'] = new['author']
-	if 'body' in new: prior['body'] = new['body']
-	if 'ttl' in new: prior['ttl'] = new['ttl']
-	if 'ttd' in new: prior['ttd'] = new['ttd']
-	if 'tts' in new: prior['tts'] = new['tts']
-	if 'callback' in new: prior['callback'] = new['callback']
 
 def item_callback(source_name, itemid):
 	try:

@@ -45,11 +45,6 @@ class WritethroughDict():
 		self.item[key] = value
 		self.flush()
 
-	def set(self, dict):
-		for key, value in dict.items():
-			self.item[key] = value
-		self.flush()
-
 	def __contains__(self, key):
 		return key in self.item
 
@@ -75,6 +70,60 @@ def load_item(source_name, item_id):
 	"""Loads an item from a source."""
 	item_path = os.path.join(DUNGEON_PATH, source_name, f'{item_id}.item')
 	return WritethroughDict.load(item_path)
+
+
+def item_exists(source_name, item_id):
+	"""
+	Checks for the existence of an item.
+	"""
+	item_path = os.path.join(DUNGEON_PATH, source_name, f'{item_id}.item')
+	return os.path.isfile(item_path)
+
+
+def get_item_ids(cell_name):
+	"""
+	Returns a list of item ids in the given cell.
+	"""
+	cell_path = os.path.join(DUNGEON_PATH, cell_name)
+	return [
+		filename[:-5]
+		for filename in os.listdir(cell_path)
+		if filename.endswith('.item')
+	]
+
+
+def new_item(source_name, item):
+	"""
+	Creates a new item with the fields in the provided dictionary.
+	Initializes other fields to their default values.
+	"""
+	# id is required
+	if 'id' not in item:
+		raise Exception(f'Cannot create item with no id. Value = {item}')
+
+	# source must be filled in, so if it is absent it is auto-populated with
+	# source_name. Note: this allows sources to fill in a different source.
+	if 'source' not in item:
+		item['source'] = source_name
+
+	# active is forced to True for new items
+	item['active'] = True
+
+	# created is forced to the current timestamp
+	item['created'] = timestamp.now()
+
+	# title is auto-populated with the id if missing
+	if 'title' not in item:
+		item['title'] = item['id']
+
+	# tags is auto-populated if missing (not if empty!)
+	if 'tags' not in item:
+		item['tags'] = [source_name]
+
+	# All other fields are optional.
+	item_path = os.path.join(DUNGEON_PATH, item['source'], f'{item["id"]}.item')
+	return WritethroughDict.create(item_path, item)
+
 
 def load_items(source_name):
 	"""

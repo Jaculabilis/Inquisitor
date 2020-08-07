@@ -107,23 +107,17 @@ def command_add(args):
 
 	source = args.source or 'inquisitor'
 	cell_path = os.path.join(DUNGEON_PATH, source)
-	if not os.path.isdir(cell_path):
-		if args.create:
-			os.mkdir(cell_path)
-			state_path = os.path.join(cell_path, "state")
-			with open(state_path, 'w', encoding='utf8') as f:
-				f.write(json.dumps({}))
-		else:
-			logger.error("Source '{}' does not exist".format(source))
-			return -1
+	if args.create:
+		from inquisitor.sources import ensure_cell
+		ensure_cell(source)
+	elif not os.path.isdir(cell_path):
+		logger.error("Source '{}' does not exist".format(source))
+		return -1
 
-	from inquisitor.sources import populate_new
 	item = {
-		'id': '{:x}'.format(random.getrandbits(16 * 4)),
-		'source': 'inquisitor'
+		'id': args.id or '{:x}'.format(random.getrandbits(16 * 4)),
+		'source': source,
 	}
-	if args.id: item['id'] = str(args.id)
-	if args.source: item['source'] = str(args.source)
 	if args.title: item['title'] = str(args.title)
 	if args.link: item['link'] = str(args.link)
 	if args.time: item['time'] = int(args.time)
@@ -133,13 +127,10 @@ def command_add(args):
 	if args.ttl: item['ttl'] = int(args.ttl)
 	if args.ttd: item['ttd'] = int(args.ttd)
 	if args.tts: item['tts'] = int(args.tts)
-	populate_new(item['source'], item)
 
-	s = json.dumps(item, indent=2)
-	path = os.path.join(DUNGEON_PATH, item['source'], item['id'] + '.item')
-	with open(path, 'w', encoding='utf8') as f:
-		f.write(s)
-	logger.info(item)
+	from inquisitor.loader import new_item
+	saved_item = new_item(source, item)
+	logger.info(saved_item)
 
 
 def command_feed(args):
