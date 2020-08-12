@@ -135,7 +135,14 @@ def update_source(source_name, source):
 		item_source = item.get('source', source_name)
 		created_item = loader.new_item(item_source, item)
 		if has_create_handler:
-			source.on_create(state, created_item)
+			# Because some sources do not return items more than once,
+			# exceptions in the on-create handler must be squashed.
+			try:
+				source.on_create(state, created_item)
+			except:
+				error.as_item(
+					f'Exception in {source_name}.on_create',
+					traceback.format_exc())
 
 	# Update the other items using the fetched items' values.
 	for new_item in updated_items:
@@ -177,14 +184,16 @@ def update_source(source_name, source):
 				remove = True
 		# Items to be removed are deleted
 		if remove:
-			if has_delete_handler:
-				source.on_delete(state, item)
-			del_count += 1
-			file_path = os.path.join(DUNGEON_PATH, item['source'], item['id'] + ".item")
 			try:
-				os.remove(file_path)
+				if has_delete_handler:
+					# Run the delete handler so exceptions prevent deletions
+					source.on_delete(state, item)
+				loader.delete_item(source_name, item['id'])
+				del_count += 1
 			except:
-				error.as_item("Failed to delete {}".format(file_path))
+				error.as_item(
+					f'Failed to delete {source_name}/{item["id"]}',
+					traceback.format_exc())
 
 	# Note update timestamp in state
 	state['last_updated'] = timestamp.now()
@@ -210,4 +219,6 @@ def item_callback(source_name, itemid):
 		item.flush()
 		state.flush()
 	except Exception:
-		error.as_item(f"Error executing callback for {source_name}/{itemid}", traceback.format_exc())
+		error.as_item(
+			f"Error executing callback for {source_name}/{itemid}",
+			traceback.format_exc())

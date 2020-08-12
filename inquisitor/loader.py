@@ -128,6 +128,14 @@ def new_item(source_name, item):
 	return WritethroughDict.create(item_path, item)
 
 
+def delete_item(source_name, item_id):
+	"""
+	Delete an item.
+	"""
+	item_path = os.path.join(DUNGEON_PATH, source_name, f'{item_id}.item')
+	os.remove(item_path)
+
+
 def load_items(source_name):
 	"""
 	Returns a map of ids to items and a list of unreadable files.
