@@ -126,6 +126,7 @@ dmypy.json
 # Praw files
 praw.ini
 
-# Inquisitor scratch directory
+# Inquisitor directories
 dungeon/
+cache/
 

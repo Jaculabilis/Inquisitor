@@ -4,10 +4,10 @@ import os
 import traceback
 
 # Third party imports
-from flask import Flask, render_template, request, jsonify
+from flask import Flask, render_template, request, jsonify, abort
 
 # Application imports
-from inquisitor.configs import logger, DUNGEON_PATH
+from inquisitor.configs import logger, DUNGEON_PATH, CACHE_PATH
 from inquisitor import sources, loader, timestamp
 
 # Globals
@@ -145,3 +145,11 @@ def callback():
 		logger.error("Bad request params: {}".format(params))
 	sources.item_callback(params['source'], params['itemid'])
 	return jsonify({})
+
+@app.route('/cache/<path:cache_path>')
+def cache(cache_path):
+	path = os.path.join(CACHE_PATH, cache_path)
+	if not os.path.isfile(path):
+		return abort(404)
+	with open(path, 'rb') as f:
+		return f.read()

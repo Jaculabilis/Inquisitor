@@ -3,6 +3,7 @@ import logging
 
 DUNGEON_PATH = os.path.abspath(os.environ.get("INQUISITOR_DUNGEON") or "./dungeon")
 SOURCES_PATH = os.path.abspath(os.environ.get("INQUISITOR_SOURCES") or "./sources")
+CACHE_PATH = os.path.abspath(os.environ.get("INQUISITOR_CACHE") or "./cache")
 
 logger = logging.getLogger("inquisitor")
 handler = logging.StreamHandler()
