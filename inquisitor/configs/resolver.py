@@ -25,7 +25,7 @@ DEFAULT_LOG_FILE = None
 
 # Whether logging is verbose
 CONFIG_VERBOSE = 'Verbose'
-DEFAULT_VERBOSITY = False
+DEFAULT_VERBOSITY = 'false'
 
 
 def read_config_file(config_path):
@@ -88,7 +88,10 @@ log_file = configs.get(CONFIG_LOGFILE) or DEFAULT_LOG_FILE
 if log_file and not os.path.isabs(log_file):
 	raise ValueError(f'Non-absolute log file path: {log_file}')
 
-is_verbose = (configs.get(CONFIG_VERBOSE) == 'true') or DEFAULT_VERBOSITY
+is_verbose = configs.get(CONFIG_VERBOSE) or DEFAULT_VERBOSITY
+if is_verbose != 'true' and is_verbose != 'false':
+	raise ValueError(f'Invalid verbose value (must be "true" or "false"): {is_verbose}')
+is_verbose = (is_verbose == 'true')
 
 
 # Set up logging
