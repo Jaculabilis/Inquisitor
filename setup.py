@@ -11,4 +11,9 @@ setuptools.setup(
 	packages=setuptools.find_packages(),
 	python_requires=">=3.6",
 	install_requires=requires,
+	entry_points={
+		"console_scripts": [
+			"inquisitor = inquisitor.__main__:main"
+		],
+	},
 )
