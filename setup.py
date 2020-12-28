@@ -13,7 +13,7 @@ setuptools.setup(
 	install_requires=requires,
 	entry_points={
 		"console_scripts": [
-			"inquisitor = inquisitor.__main__:main"
+			"inquisitor = inquisitor.cli:main",
 		],
 	},
 )

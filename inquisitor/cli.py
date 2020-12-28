@@ -4,9 +4,10 @@ import json
 import logging
 import os
 import random
+import sys
 
 # Application imports
-from inquisitor.configs import logger, DUNGEON_PATH, SOURCES_PATH
+from inquisitor.configs import logger, DUNGEON_PATH, SOURCES_PATH, add_logging_handler
 
 
 def command_test(args):
@@ -216,3 +217,63 @@ def command_run(args):
 	except Exception as e:
 		logger.error(e)
 		return -1
+
+
+def command_help(args):
+	"""Print this help message and exit."""
+	print_usage()
+	return 0
+
+
+def main():
+	"""CLI entry point"""
+	# Enable piping
+	from signal import signal, SIGPIPE, SIG_DFL
+	signal(SIGPIPE, SIG_DFL)
+
+	# Collect the commands from this module
+	import inquisitor.cli
+	commands = {
+		name[8:] : func
+		for name, func in vars(inquisitor.cli).items()
+		if name.startswith('command_')
+	}
+	descriptions = "\n".join([
+		"- {0}: {1}".format(name, func.__doc__)
+		for name, func in commands.items()])
+
+	# Set up the parser
+	parser = argparse.ArgumentParser(
+		description="Available commands:\n{}\n".format(descriptions),
+		formatter_class=argparse.RawDescriptionHelpFormatter,
+		add_help=False)
+	parser.add_argument("command",
+		nargs="?",
+		default="help",
+		help="The command to execute",
+		choices=commands,
+		metavar="command")
+	parser.add_argument("args",
+		nargs=argparse.REMAINDER,
+		help="Command arguments",
+		metavar="args")
+	parser.add_argument("-v",
+		action="store_true",
+		dest="verbose",
+		help="Enable debug logging")
+
+	# Extract the usage print for command_help
+	global print_usage
+	print_usage = parser.print_help
+
+	args = parser.parse_args()
+
+	# Initialize a console logger
+	add_logging_handler(verbose=args.verbose, log_filename=None)
+
+	# Execute command
+	if args.command:
+		sys.exit(commands[args.command](args.args))
+	else:
+		print("command required")
+		sys.exit(0)
