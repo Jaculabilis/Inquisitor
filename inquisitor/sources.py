@@ -74,31 +74,35 @@ def load_source(source_name):
 	Attempts to load the source module with the given name.
 	Raises an exception on failure.
 	"""
-	# Push the sources directory.
 	cwd = os.getcwd()
 	try:
+		# Push the sources directory.
 		os.chdir(SOURCES_PATH)
+		# Make the sources directory importable while working with sources.
+		if SOURCES_PATH not in sys.path:
+			sys.path.insert(0, SOURCES_PATH)
 
 		# Check if the named source is present.
 		source_file_name = source_name + '.py'
 		if not os.path.isfile(source_file_name):
-			raise FileNotFoundError('Missing "{source_name}" in "{SOURCES_PATH}"')
+			raise FileNotFoundError(f'Missing "{source_name}" in "{SOURCES_PATH}"')
 
 		# Import the source module by file path.
-		logger.debug('Loading module "{source_file_name}"')
+		logger.debug(f'Loading module "{source_file_name}"')
 		spec = importlib.util.spec_from_file_location("itemsource", source_file_name)
 		itemsource = importlib.util.module_from_spec(spec)
 		spec.loader.exec_module(itemsource)
-		itemsource = importlib.import_module(source_name)
 
 		# Require fetch_new().
 		if not hasattr(itemsource, 'fetch_new'):
-			raise ImportError('Missing fetch_new in "{source_file_name}"')
+			raise ImportError(f'Missing fetch_new in "{source_file_name}"')
 
 		return itemsource
 
 	finally:
 		os.chdir(cwd)
+		if SOURCES_PATH in sys.path:
+			sys.path.remove(SOURCES_PATH)
 
 
 def update_source(source_name, source):
