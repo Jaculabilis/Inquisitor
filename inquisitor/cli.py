@@ -9,6 +9,25 @@ import random
 from inquisitor.configs import logger, DUNGEON_PATH, SOURCES_PATH
 
 
+def command_test(args):
+	"""Echo config file values."""
+	from inquisitor.configs.resolver import (
+		config_path,
+		CONFIG_DATA, data_path,
+		CONFIG_SOURCES, source_path,
+		CONFIG_CACHE, cache_path,
+		CONFIG_LOGFILE, log_file,
+		CONFIG_VERBOSE, is_verbose,
+	)
+	print(f'Inquisitor configured from {config_path}')
+	print(f'    {CONFIG_DATA} = {data_path}')
+	print(f'    {CONFIG_SOURCES} = {source_path}')
+	print(f'    {CONFIG_CACHE} = {cache_path}')
+	print(f'    {CONFIG_LOGFILE} = {log_file}')
+	print(f'    {CONFIG_VERBOSE} = {is_verbose}')
+	return 0
+
+
 def command_update(args):
 	"""Fetch and store new items from the specified sources."""
 	parser = argparse.ArgumentParser(
