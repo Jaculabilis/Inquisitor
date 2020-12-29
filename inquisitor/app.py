@@ -166,3 +166,7 @@ def cache(cache_path):
 		return abort(404)
 	with open(path, 'rb') as f:
 		return f.read()
+
+
+def wsgi():
+	return app
