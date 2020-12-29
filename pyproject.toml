@@ -1,0 +1,24 @@
+[tool.poetry]
+name = "inquisitor"
+version = "0.2.0"
+description = "An arbitrary feed aggregator"
+authors = ["Tim Van Baak <tim.vanbaak+inquisitor@gmail.com>"]
+readme = "README.md"
+repository = "https://github.com/Jaculabilis/Inquisitor"
+
+[tool.poetry.dependencies]
+python = "^3.6"
+Flask = "^1.1.2"
+requests = "^2.25.1"
+beautifulsoup4 = "^4.9.3"
+
+[tool.poetry.dev-dependencies]
+gunicorn = "^20.0.4"
+praw = "^7.1.0"
+
+[tool.poetry.scripts]
+inquisitor = "inquisitor.cli:main"
+
+[build-system]
+requires = ["poetry>=0.12"]
+build-backend = "poetry.masonry.api"
