@@ -19,6 +19,15 @@ def command_test(args):
 		CONFIG_CACHE, cache_path,
 		CONFIG_LOGFILE, log_file,
 		CONFIG_VERBOSE, is_verbose,
+		CONFIG_SUBFEEDS, subfeeds,
+	)
+	subfeeds = '; '.join(
+		'{0}: {1}'.format(
+			sf_name,
+			' '.join(sf_sources)
+		)
+		for sf_name, sf_sources
+		in subfeeds.items()
 	)
 	print(f'Inquisitor configured from {config_path}')
 	print(f'    {CONFIG_DATA} = {data_path}')
@@ -26,6 +35,7 @@ def command_test(args):
 	print(f'    {CONFIG_CACHE} = {cache_path}')
 	print(f'    {CONFIG_LOGFILE} = {log_file}')
 	print(f'    {CONFIG_VERBOSE} = {is_verbose}')
+	print(f'    {CONFIG_SUBFEEDS} = {subfeeds}')
 	return 0
 
 

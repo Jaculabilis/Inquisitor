@@ -27,6 +27,11 @@ DEFAULT_LOG_FILE = None
 CONFIG_VERBOSE = 'Verbose'
 DEFAULT_VERBOSITY = 'false'
 
+# Subfeed source lists, with each subfeed config separated by lines and
+# sources within a subfeed separated by spaces
+CONFIG_SUBFEEDS = 'Subfeeds'
+DEFAULT_SUBFEEDS = None
+
 
 def read_config_file(config_path):
 	"""
@@ -38,21 +43,26 @@ def read_config_file(config_path):
 	if not os.path.isfile(config_path):
 		raise FileNotFoundError(f'No config file found at {config_path}')
 	accumulated_configs = {}
+	current_key = None
 	with open(config_path, 'r', encoding='utf8') as cfg:
 		line_no = 0
 		for line in cfg:
 			line_no += 1
-			# Skip blank lines
-			if not line.strip():
-				continue
-			# Skip comments
-			if line.lstrip().startswith('#'):
+			# Skip blank lines and comments
+			if not line.strip() or line.lstrip().startswith('#'):
 				continue
 			# Accumulate config keyvalue pairs
-			if '=' not in line:
-				raise ValueError(f'Invalid config format on line {line_no}')
-			key, value = line.split('=', maxsplit=1)
-			accumulated_configs[key.strip()] = value.strip()
+			if '=' in line:
+				# "key = value" begins a new keyvalue pair
+				current_key, value = line.split('=', maxsplit=1)
+				current_key = current_key.strip()
+				accumulated_configs[current_key] = value.strip()
+			else:
+				# If there's no '=' and no previous key, throw
+				if not current_key:
+					raise ValueError(f'Invalid config format on line {line_no}')
+				else:
+					accumulated_configs[current_key] += '\n' + line.strip()
 
 	return accumulated_configs
 
@@ -93,6 +103,16 @@ if is_verbose != 'true' and is_verbose != 'false':
 	raise ValueError(f'Invalid verbose value (must be "true" or "false"): {is_verbose}')
 is_verbose = (is_verbose == 'true')
 
+subfeeds = configs.get(CONFIG_SUBFEEDS) or DEFAULT_SUBFEEDS
+if subfeeds:
+	sf_defs = [sf.strip() for sf in subfeeds.split('\n') if sf.strip()]
+	subfeeds = {}
+	for sf_def in sf_defs:
+		if ':' not in sf_def:
+			raise ValueError(f'Invalid subfeed definition: {sf_def}')
+		sf_name, sf_sources = sf_def.split(':', maxsplit=1)
+		sf_sources = sf_sources.split()
+		subfeeds[sf_name.strip()] = [source.strip() for source in sf_sources]
 
 # Set up logging
 logger = logging.getLogger("inquisitor")
