@@ -173,7 +173,7 @@ def command_feed(args):
 	from inquisitor import loader
 	from inquisitor import timestamp
 
-	items, errors = loader.load_active_items()
+	items, errors = loader.load_active_items(source_names=None)
 	if not items and not errors:
 		print("Feed is empty")
 		return 0

@@ -4,10 +4,10 @@ import os
 import traceback
 
 # Third party imports
-from flask import Flask, render_template, request, jsonify, abort
+from flask import Flask, render_template, request, jsonify, abort, redirect, url_for
 
 # Application imports
-from inquisitor.configs import logger, DUNGEON_PATH, CACHE_PATH
+from inquisitor.configs import logger, DUNGEON_PATH, CACHE_PATH, subfeeds
 from inquisitor import sources, loader, timestamp
 
 # Globals
@@ -27,6 +27,19 @@ def datetimeformat(value):
 
 @app.route("/")
 def root():
+	return redirect(url_for('feed'))
+
+@app.route("/feed/")
+def feed():
+	return feed_for_sources(source_names=None)
+
+@app.route("/feed/<string:feed_name>/")
+def subfeed(feed_name):
+	if feed_name not in subfeeds:
+		return abort(404)
+	return feed_for_sources(subfeeds[feed_name])
+
+def feed_for_sources(source_names):
 	# Determine exclusion filters
 	filters = []
 	wl_param = request.args.get('only')
@@ -40,7 +53,7 @@ def root():
 
 	# Get all active+filtered items and all active tags
 	total = 0
-	items, errors = loader.load_active_items()
+	items, errors = loader.load_active_items(source_names)
 	active_items = []
 	active_tags = {}
 	for item in items:

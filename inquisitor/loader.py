@@ -2,7 +2,7 @@ import os
 import json
 
 
-from inquisitor.configs import DUNGEON_PATH
+from inquisitor.configs import DUNGEON_PATH, logger
 from inquisitor import error
 from inquisitor import timestamp
 
@@ -152,28 +152,35 @@ def load_items(source_name):
 				errors.append(filename)
 	return items, errors
 
-def load_active_items():
+
+def load_active_items(source_names):
 	"""
-	Returns a list of active items and a list of unreadable items.
+	Returns a list of active items and a list of unreadable items. If
+	`source_names` is defined, load only from sources in that list.
 	"""
 	items = []
 	errors = []
 	now = timestamp.now()
-	for cell_name in os.listdir(DUNGEON_PATH):
-		cell_path = os.path.join(DUNGEON_PATH, cell_name)
-		for filename in os.listdir(cell_path):
-			if filename.endswith('.item'):
-				try:
-					item = load_item(cell_name, filename[:-5])
-					# The time-to-show field hides items until an expiry date.
-					if 'tts' in item:
-						tts_date = item['created'] + item['tts']
-						if now < tts_date:
-							continue
-					# Don't show inactive items
-					if not item['active']:
+	check_list = source_names or os.listdir(DUNGEON_PATH)
+	for source_name in check_list:
+		source_path = os.path.join(DUNGEON_PATH, source_name)
+		if not os.path.isdir(source_path):
+			logger.warning(f'Skipping nonexistent source {source_name}')
+			continue
+		for filename in os.listdir(source_path):
+			if not filename.endswith('.item'):
+				continue
+			try:
+				item = load_item(source_name, filename[:-5])
+				# The time-to-show field hides items until an expiry date.
+				if 'tts' in item:
+					tts_date = item['created'] + item['tts']
+					if now < tts_date:
 						continue
-					items.append(item)
-				except Exception:
-					errors.append(filename)
+				# Don't show inactive items
+				if not item['active']:
+					continue
+				items.append(item)
+			except Exception:
+				errors.append(filename)
 	return items, errors
