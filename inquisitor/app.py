@@ -107,7 +107,7 @@ def feed_for_sources(source_names):
 
 	selection = active_items[:100]
 
-	return render_template("feed.html",
+	return render_template("feed.jinja2",
 		items=selection,
 		mdeac=[
 			{'source': item['source'], 'itemid': item['id']}
