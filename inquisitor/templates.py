@@ -133,7 +133,7 @@ class RedditScraper:
 
 	def item_from_post(self, post):
 		item = {
-			'source': 'reddit',
+			'source': self.source,
 			'id': post.id,
 			'title': self.get_title(post),
 			'link': self.get_link(post),
