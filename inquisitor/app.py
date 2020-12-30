@@ -7,7 +7,7 @@ import traceback
 from flask import Flask, render_template, request, jsonify, abort, redirect, url_for
 
 # Application imports
-from inquisitor.configs import logger, DUNGEON_PATH, CACHE_PATH, subfeeds
+from inquisitor.configs import logger, DUNGEON_PATH, CACHE_PATH, subfeeds, init_default_logging
 from inquisitor import sources, loader, timestamp
 
 # Globals
@@ -169,4 +169,5 @@ def cache(cache_path):
 
 
 def wsgi():
+	init_default_logging()
 	return app
