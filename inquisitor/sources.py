@@ -89,9 +89,10 @@ def load_source(source_name):
 
 		# Import the source module by file path.
 		logger.debug(f'Loading module "{source_file_name}"')
-		spec = importlib.util.spec_from_file_location("itemsource", source_file_name)
+		spec = importlib.util.spec_from_file_location(source_name, source_file_name)
 		itemsource = importlib.util.module_from_spec(spec)
 		spec.loader.exec_module(itemsource)
+		itemsource = importlib.import_module(source_name)
 
 		# Require fetch_new().
 		if not hasattr(itemsource, 'fetch_new'):
