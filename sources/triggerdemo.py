@@ -25,7 +25,7 @@ def on_create(state, item):
 	with open('dungeon/inquisitor/triggerdemo_create.item', 'w') as f:
 		json.dump({
 			'source': 'inquisitor',
-			'id': 'triggerdemo_create.item',
+			'id': 'triggerdemo_create',
 			'title': 'Trigger demo on_create item',
 			'active': True,
 		}, f)
@@ -35,7 +35,7 @@ def on_delete(state, item):
 	with open('dungeon/inquisitor/triggerdemo_delete.item', 'w') as f:
 		json.dump({
 			'source': 'inquisitor',
-			'id': 'triggerdemo_delete.item',
+			'id': 'triggerdemo_delete',
 			'title': 'Trigger demo on_delete item',
 			'active': True,
 		}, f)

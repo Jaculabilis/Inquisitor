@@ -22,6 +22,12 @@ USE_NEWEST = (
 )
 
 
+class InquisitorStubSource:
+	"""A dummy source-like object for clearing out ad-hoc inquisitor items"""
+	def fetch_new(self, state):
+		return []
+
+
 def ensure_cell(name):
 	"""
 	Creates a cell in the dungeon. Idempotent.
@@ -74,6 +80,9 @@ def load_source(source_name):
 	Attempts to load the source module with the given name.
 	Raises an exception on failure.
 	"""
+	if source_name == 'inquisitor':
+		return InquisitorStubSource()
+
 	cwd = os.getcwd()
 	try:
 		# Push the sources directory.
