@@ -135,7 +135,11 @@ def add_logging_handler(verbose, log_filename):
 		logging.INFO
 	)
 	handler = (
-		logging.FileHandler(log_filename, encoding='utf8')
+		logging.handlers.RotatingFileHandler(
+			log_filename,
+			encoding='utf8',
+			maxBytes=2**22, # 4 MB per log file
+			backupCount=4)  # 16 MB total
 		if log_filename else
 		logging.StreamHandler()
 	)
