@@ -218,11 +218,12 @@ def command_run(args):
 		description=command_run.__doc__,
 		add_help=False)
 	parser.add_argument("--debug", action="store_true")
+	parser.add_argument("--port", type=int, default=5000)
 	args = parser.parse_args(args)
 
 	try:
 		from inquisitor.app import app
-		app.run(debug=args.debug)
+		app.run(port=args.port, debug=args.debug)
 		return 0
 	except Exception as e:
 		logger.error(e)
