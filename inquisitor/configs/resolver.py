@@ -31,6 +31,7 @@ DEFAULT_VERBOSITY = 'false'
 # sources within a subfeed separated by spaces
 CONFIG_SUBFEEDS = 'Subfeeds'
 DEFAULT_SUBFEEDS = None
+SUBFEED_CONFIG_FILE = 'subfeeds.conf'
 
 
 def read_config_file(config_path):
@@ -65,6 +66,18 @@ def read_config_file(config_path):
 					accumulated_configs[current_key] += '\n' + line.strip()
 
 	return accumulated_configs
+
+
+def parse_subfeed_value(value):
+	sf_defs = [sf.strip() for sf in value.split('\n') if sf.strip()]
+	subfeeds = {}
+	for sf_def in sf_defs:
+		if ':' not in sf_def:
+			raise ValueError(f'Invalid subfeed definition: {sf_def}')
+		sf_name, sf_sources = sf_def.split(':', maxsplit=1)
+		sf_sources = sf_sources.split()
+		subfeeds[sf_name.strip()] = [source.strip() for source in sf_sources]
+	return subfeeds
 
 
 # Read envvar for config file location, with fallback to default
@@ -105,14 +118,25 @@ is_verbose = (is_verbose == 'true')
 
 subfeeds = configs.get(CONFIG_SUBFEEDS) or DEFAULT_SUBFEEDS
 if subfeeds:
-	sf_defs = [sf.strip() for sf in subfeeds.split('\n') if sf.strip()]
-	subfeeds = {}
-	for sf_def in sf_defs:
-		if ':' not in sf_def:
-			raise ValueError(f'Invalid subfeed definition: {sf_def}')
-		sf_name, sf_sources = sf_def.split(':', maxsplit=1)
-		sf_sources = sf_sources.split()
-		subfeeds[sf_name.strip()] = [source.strip() for source in sf_sources]
+	subfeeds = parse_subfeed_value(subfeeds)
+
+
+def get_subfeed_overrides():
+	"""
+	Check for and parse the secondary subfeed configuration file
+	"""
+	path = os.path.join(source_path, SUBFEED_CONFIG_FILE)
+	if not os.path.isfile(path):
+		return None
+	overrides = read_config_file(path)
+	if CONFIG_SUBFEEDS not in overrides:
+		return None
+	value = overrides[CONFIG_SUBFEEDS]
+	if not value:
+		return None
+	parsed_value = parse_subfeed_value(value)
+	return parsed_value
+
 
 # Set up logging
 logger = logging.getLogger("inquisitor")

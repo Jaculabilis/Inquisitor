@@ -7,7 +7,14 @@ import traceback
 from flask import Flask, render_template, request, jsonify, abort, redirect, url_for
 
 # Application imports
-from inquisitor.configs import logger, DUNGEON_PATH, CACHE_PATH, subfeeds, init_default_logging
+from inquisitor.configs import (
+	DUNGEON_PATH,
+	SOURCES_PATH,
+	CACHE_PATH,
+	subfeeds,
+	get_subfeed_overrides,
+	logger,
+	init_default_logging)
 from inquisitor import sources, loader, timestamp
 
 # Globals
@@ -35,9 +42,22 @@ def feed():
 
 @app.route("/feed/<string:feed_name>/")
 def subfeed(feed_name):
-	if feed_name not in subfeeds:
+	# Check for and apply subfeed overrides
+	subfeed_overrides = get_subfeed_overrides()
+	subfeed_config = subfeed_overrides or subfeeds or {}
+
+	# The built-in inquisitor subfeed contains sources not in another subfeed
+	if feed_name == 'inquisitor':
+		all_sources = os.listdir(DUNGEON_PATH)
+		for subfeed, sources in subfeed_config.items():
+			for source_name in sources:
+				if source_name in all_sources:
+					all_sources.remove(source_name)
+		return feed_for_sources(all_sources)
+
+	if feed_name not in subfeed_config:
 		return abort(404)
-	return feed_for_sources(subfeeds[feed_name])
+	return feed_for_sources(subfeed_config[feed_name])
 
 def feed_for_sources(source_names):
 	# Determine exclusion filters
