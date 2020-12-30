@@ -231,12 +231,12 @@ dev = ["pytest", "pytest-timeout", "coverage", "tox", "sphinx", "pallets-sphinx-
 watchdog = ["watchdog"]
 
 [extras]
-dev = ["praw"]
+dev = ["praw", "gunicorn"]
 
 [metadata]
 lock-version = "1.1"
 python-versions = "^3.6"
-content-hash = "98a9dfc5fddbe26f204c11b09b8b5a792d47b413cfd94eb5eb23b2f6a4d55062"
+content-hash = "1580c74eeebc065ebed36357b39a0b1b9f490930e22978085a30ce2fe1c9e301"
 
 [metadata.files]
 beautifulsoup4 = [
