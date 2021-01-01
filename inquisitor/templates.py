@@ -194,7 +194,7 @@ class RedditScraper:
 		return tags
 
 	def get_ttl(self, post):
-		return 60 * 60 * 24 * 7, # 1 week
+		return 60 * 60 * 24 * 7  # 1 week
 
 	def get_ttd(self, post):
 		return None
