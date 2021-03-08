@@ -181,6 +181,17 @@ class RedditScraper:
 				parts.append(f'<img src="{preview["url"]}">')
 			except:
 				pass
+		if getattr(post, 'is_gallery', False):
+			try:
+				for gallery_item in post.gallery_data['items']:
+					media_id = gallery_item['media_id']
+					metadata = post.media_metadata[media_id]
+					small_previews = [p for p in metadata['p'] if p['x'] < 800]
+					preview = sorted(small_previews, key=lambda p:-p['x'])[0]
+					parts.append(f'<i>link:</i> <a href="{metadata["s"]["u"]}">{metadata["s"]["u"]}</a>')
+					parts.append(f'<img src="{preview["u"]}">')
+			except:
+				pass
 		if post.selftext:
 			limit = post.selftext[1024:].find(' ')
 			preview_body = post.selftext[:1024 + limit]
