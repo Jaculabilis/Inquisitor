@@ -104,6 +104,8 @@ class LinearCrawler:
 class RedditScraper:
 	"""
 	An engine for generating items from subreddits.
+	Requires defining source, subreddit_name
+	fetch new with RedditScraper.fetch_new(state, __name__, reddit)
 	"""
 	@staticmethod
 	def fetch_new(state, name, reddit):
@@ -170,7 +172,7 @@ class RedditScraper:
 	def get_body(self, post):
 		parts = []
 		if not post.is_self:
-			parts.append(f'<a href="{post.url}">link post</a>')
+			parts.append(f'<i>link:</i> <a href="{post.url}">{post.url}</a>')
 		if hasattr(post, 'preview'):
 			try:
 				previews = post.preview['images'][0]['resolutions']
