@@ -28,7 +28,7 @@ def command_test(args):
 		)
 		for sf_name, sf_sources
 		in subfeeds.items()
-	)
+	) if subfeeds else ''
 	print(f'Inquisitor configured from {config_path}')
 	print(f'    {CONFIG_DATA} = {data_path}')
 	print(f'    {CONFIG_SOURCES} = {source_path}')
