@@ -176,6 +176,7 @@ def callback():
 	params = request.get_json()
 	if 'source' not in params and 'itemid' not in params:
 		logger.error("Bad request params: {}".format(params))
+	logger.info('Executing callback for {}/{}'.format(params['source'], params['itemid']))
 	sources.item_callback(params['source'], params['itemid'])
 	return jsonify({})
 

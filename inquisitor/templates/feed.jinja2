@@ -76,10 +76,11 @@
 					body: JSON.stringify({items: items}),
 				})
 				.then(function () {
-					location.reload()
+					location.reload();
 				});
 			};
 			var callback = function (source, itemid) {
+				document.getElementById(source + "-" + itemid + "-callback").disabled = true;
 				fetch('/callback/', {
 					method: 'POST',
 					headers: {
@@ -107,7 +108,7 @@
 				<p>{{item.body|safe}}</p>
 				{% endif %}
 				{% if item.callback %}
-				<p><button onclick="javascript:callback('{{item.source}}', '{{item.id}}')">Callback</button></p>
+				<p><button id="{{item.source}}-{{item.id}}-callback" onclick="javascript:callback('{{item.source}}', '{{item.id}}')">Callback</button></p>
 				{% endif %}
 				</details>
 				{% else %}<span class="item-title">{{item.title}}</span><br>
