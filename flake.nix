@@ -9,5 +9,6 @@
       let
         pkgs = nixpkgs.legacyPackages."x86_64-linux";
       in pkgs.callPackage ./default.nix {};
+    defaultPackage.x86_64-linux = self.packages."x86_64-linux".default;
   };
 }
