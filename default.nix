@@ -1,11 +1,8 @@
-(import
-  (
-    let lock = builtins.fromJSON (builtins.readFile ./flake.lock); in
-    fetchTarball {
-      url = "https://github.com/edolstra/flake-compat/archive/${lock.nodes.flake-compat.locked.rev}.tar.gz";
-      sha256 = lock.nodes.flake-compat.locked.narHash;
-    }
-  )
-  { src = ./.; }
-).defaultNix
+{ pkgs ? import (fetchTarball "https://github.com/NixOS/nixpkgs/archive/4d2b37a84fad1091b9de401eb450aae66f1a741e.tar.gz") {}
+}:
+let
+  app = pkgs.poetry2nix.mkPoetryApplication {
+    projectDir = ./.;
+  };
+in app.dependencyEnv
 
