@@ -1,14 +1,27 @@
 {
   inputs = {
-    nixpkgs.url = "github:NixOS/nixpkgs?rev=2ebb6c1e5ae402ba35cca5eec58385e5f1adea04";
+    nixpkgs.url = "github:NixOS/nixpkgs?ref=refs/tags/22.11";
+    flake-compat = {
+      url = "github:edolstra/flake-compat";
+      flake = false;
+    };
   };
 
-  outputs = { self, nixpkgs }:
+  outputs = { self, nixpkgs, flake-compat }:
+  let
+    system = "x86_64-linux";
+    pkgs = nixpkgs.legacyPackages.${system};
+  in
   {
-    packages."x86_64-linux".default =
-      let
-        pkgs = nixpkgs.legacyPackages."x86_64-linux";
-      in pkgs.callPackage ./default.nix {};
-    defaultPackage.x86_64-linux = self.packages."x86_64-linux".default;
+    packages.${system}.default =
+      (pkgs.poetry2nix.mkPoetryApplication {
+        projectDir = ./.;
+      }).dependencyEnv;
+
+    defaultPackage.${system} = self.packages.${system}.default;
+
+    devShell.${system} = pkgs.mkShell {
+      buildInputs = [ (pkgs.python3.withPackages (p: [p.poetry])) ];
+    };
   };
 }
