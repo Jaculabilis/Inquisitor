@@ -42,7 +42,8 @@ def read_config_file(config_path):
 	"""
 	# Parse the config file into key-value pairs
 	if not os.path.isfile(config_path):
-		raise FileNotFoundError(f'No config file found at {config_path}')
+
+		raise FileNotFoundError(f'No config file found at {config_path}, try setting {CONFIG_ENVVAR}')
 	accumulated_configs = {}
 	current_key = None
 	with open(config_path, 'r', encoding='utf8') as cfg:
