@@ -16,6 +16,21 @@
         "type": "github"
       }
     },
+    "my-flake": {
+      "locked": {
+        "lastModified": 1670879933,
+        "narHash": "sha256-V45PH0cnFLilx66x4td5qQnWNn/V/6/6b7FQDIHvdyI=",
+        "owner": "Jaculabilis",
+        "repo": "my-flake",
+        "rev": "2b2cd07a6d971b15fc5f65d6d963d0da551a5892",
+        "type": "github"
+      },
+      "original": {
+        "owner": "Jaculabilis",
+        "repo": "my-flake",
+        "type": "github"
+      }
+    },
     "nixpkgs": {
       "locked": {
         "lastModified": 1669833724,
@@ -35,6 +50,7 @@
     "root": {
       "inputs": {
         "flake-compat": "flake-compat",
+        "my-flake": "my-flake",
         "nixpkgs": "nixpkgs"
       }
     }
