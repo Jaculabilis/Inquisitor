@@ -46,5 +46,6 @@
         projectDir = ./.;
       };
     };
+    nixosModules.default = import ./module.nix self;
   };
 }
