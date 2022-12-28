@@ -31,7 +31,7 @@ in
   config =
   let
     # Get the inquisitor package from the flake.
-    inquisitor = flake.packages.${pkgs.stdenv.hostPlatform.system}.default;
+    inquisitor = flake.packages.${pkgs.stdenv.hostPlatform.system}.env;
 
     # Define the inquisitor state directory.
     stateDir = "/var/lib/inquisitor";
@@ -80,7 +80,7 @@ in
       if [ -f ${stateDir}/scp-helper ]; then
         ${pkgs.coreutils}/bin/rm ${stateDir}/scp-helper
       fi
-      ln -s -t ${stateDir}/scp-helper ${scp-helper}/bin/scp-helper
+      ln -s -t ${stateDir} ${scp-helper}/bin/scp-helper
     '';
 
     # Create a run script for the service.
