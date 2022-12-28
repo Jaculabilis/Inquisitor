@@ -21,6 +21,9 @@ dev = ["praw", "gunicorn", "feedparser"]
 [tool.poetry.scripts]
 inquisitor = "inquisitor.cli:main"
 
+[tool.poetry.group.dev.dependencies]
+black = "^22.12.0"
+
 [build-system]
 requires = ["poetry>=0.12"]
 build-backend = "poetry.masonry.api"
