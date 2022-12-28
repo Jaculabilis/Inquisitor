@@ -18,7 +18,11 @@
         overlays = [ self.overlays.default ];
       });
     in {
-      packages.${system}.default = pkgs.inquisitor;
+      packages.${system} = {
+        default = self.packages.${system}.inquisitor;
+        inquisitor = pkgs.inquisitor;
+        env = pkgs.inquisitor.dependencyEnv;
+      };
 
       devShells.${system}.default = pkgs.mkShell {
         buildInputs = [ (pkgs.python3.withPackages (p: [p.poetry])) ];
@@ -27,9 +31,9 @@
   in (my-flake.outputs-for each systems) //
   {
     overlays.default = final: prev: {
-      inquisitor = (final.poetry2nix.mkPoetryApplication {
+      inquisitor = final.poetry2nix.mkPoetryApplication {
         projectDir = ./.;
-      }).dependencyEnv;
+      };
     };
   };
 }
