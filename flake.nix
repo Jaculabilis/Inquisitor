@@ -13,13 +13,12 @@
     systems = [ "aarch64-linux" "x86_64-linux" ];
     each = system:
     let
-      pkgs = nixpkgs.legacyPackages.${system};
-    in
-    {
-      packages.${system}.default = (import nixpkgs {
+      pkgs = (import nixpkgs {
         inherit system;
         overlays = [ self.overlays.default ];
-      }).inquisitor;
+      });
+    in {
+      packages.${system}.default = pkgs.inquisitor;
 
       devShells.${system}.default = pkgs.mkShell {
         buildInputs = [ (pkgs.python3.withPackages (p: [p.poetry])) ];
