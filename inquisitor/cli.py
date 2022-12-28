@@ -236,6 +236,11 @@ def command_help(args):
 	return 0
 
 
+def nocommand(args):
+	print("command required")
+	return 0
+
+
 def main():
 	"""CLI entry point"""
 	# Enable piping
@@ -283,8 +288,11 @@ def main():
 	add_logging_handler(verbose=args.verbose, log_filename=None)
 
 	# Execute command
-	if args.command:
-		sys.exit(commands[args.command](args.args))
-	else:
-		print("command required")
-		sys.exit(0)
+	try:
+		command = commands.get(args.command, nocommand)
+		sys.exit(command(args.args))
+	except BrokenPipeError:
+		# See https://docs.python.org/3.10/library/signal.html#note-on-sigpipe
+		devnull = os.open(os.devnull, os.O_WRONLY)
+		os.dup2(devnull, sys.stdout.fileno())
+		sys.exit(1)
