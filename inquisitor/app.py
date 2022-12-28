@@ -8,13 +8,14 @@ from flask import Flask, render_template, request, jsonify, abort, redirect, url
 
 # Application imports
 from inquisitor.configs import (
-	DUNGEON_PATH,
-	SOURCES_PATH,
-	CACHE_PATH,
-	subfeeds,
-	get_subfeed_overrides,
-	logger,
-	init_default_logging)
+    DUNGEON_PATH,
+    SOURCES_PATH,
+    CACHE_PATH,
+    subfeeds,
+    get_subfeed_overrides,
+    logger,
+    init_default_logging,
+)
 from inquisitor import sources, loader, timestamp
 
 # Globals
@@ -22,173 +23,202 @@ app = Flask(__name__)
 
 
 def make_query_link(text, wl, bl):
-	wlp = "only=" + ",".join(wl)
-	blp = "not="  + ",".join(bl)
-	params = [p for p in (wlp, blp) if not p.endswith("=")]
-	query = "?{}".format("&".join(params))
-	return '<a href="{1}">{0}</a>'.format(text, query)
+    wlp = "only=" + ",".join(wl)
+    blp = "not=" + ",".join(bl)
+    params = [p for p in (wlp, blp) if not p.endswith("=")]
+    query = "?{}".format("&".join(params))
+    return '<a href="{1}">{0}</a>'.format(text, query)
+
 
 @app.template_filter("datetimeformat")
 def datetimeformat(value):
-	return timestamp.stamp_to_readable(value) if value is not None else ""
+    return timestamp.stamp_to_readable(value) if value is not None else ""
+
 
 @app.route("/")
 def root():
-	return redirect(url_for('feed'))
+    return redirect(url_for("feed"))
+
 
 @app.route("/feed/")
 def feed():
-	return feed_for_sources(source_names=None)
+    return feed_for_sources(source_names=None)
+
 
 @app.route("/feed/<string:feed_name>/")
 def subfeed(feed_name):
-	# Check for and apply subfeed overrides
-	subfeed_overrides = get_subfeed_overrides()
-	subfeed_config = subfeed_overrides or subfeeds or {}
+    # Check for and apply subfeed overrides
+    subfeed_overrides = get_subfeed_overrides()
+    subfeed_config = subfeed_overrides or subfeeds or {}
 
-	# The built-in inquisitor subfeed contains sources not in another subfeed
-	if feed_name == 'inquisitor':
-		all_sources = os.listdir(DUNGEON_PATH)
-		for subfeed, sources in subfeed_config.items():
-			for source_name in sources:
-				if source_name in all_sources:
-					all_sources.remove(source_name)
-		return feed_for_sources(all_sources)
+    # The built-in inquisitor subfeed contains sources not in another subfeed
+    if feed_name == "inquisitor":
+        all_sources = os.listdir(DUNGEON_PATH)
+        for subfeed, sources in subfeed_config.items():
+            for source_name in sources:
+                if source_name in all_sources:
+                    all_sources.remove(source_name)
+        return feed_for_sources(all_sources)
 
-	if feed_name not in subfeed_config:
-		return abort(404)
-	return feed_for_sources(subfeed_config[feed_name])
+    if feed_name not in subfeed_config:
+        return abort(404)
+    return feed_for_sources(subfeed_config[feed_name])
+
 
 def feed_for_sources(source_names):
-	# Determine exclusion filters
-	filters = []
-	wl_param = request.args.get('only')
-	wl = wl_param.split(",") if wl_param else []
-	bl_param = request.args.get('not')
-	bl = bl_param.split(",") if bl_param else []
-	if wl:
-		filters.append(lambda item: not any([tag in wl for tag in item['tags']]))
-	if bl:
-		filters.append(lambda item: any([tag in bl for tag in item['tags']]))
+    # Determine exclusion filters
+    filters = []
+    wl_param = request.args.get("only")
+    wl = wl_param.split(",") if wl_param else []
+    bl_param = request.args.get("not")
+    bl = bl_param.split(",") if bl_param else []
+    if wl:
+        filters.append(lambda item: not any([tag in wl for tag in item["tags"]]))
+    if bl:
+        filters.append(lambda item: any([tag in bl for tag in item["tags"]]))
 
-	# Get all active+filtered items and all active tags
-	total = 0
-	items, errors = loader.load_active_items(source_names)
-	active_items = []
-	active_tags = {}
-	for item in items:
-		if item['active']:
-			for tag in item['tags']:
-				if tag not in active_tags: active_tags[tag] = 0
-				active_tags[tag] += 1
-			# active_tags |= set(item['tags'])
-			total += 1
-			if not any(map(lambda f: f(item), filters)):
-				active_items.append(item)
-	# Sort items by time
-	active_items.sort(key=lambda i: i['time'] if 'time' in i and i['time'] else i['created'] if 'created' in i and i['created'] else 0)
+    # Get all active+filtered items and all active tags
+    total = 0
+    items, errors = loader.load_active_items(source_names)
+    active_items = []
+    active_tags = {}
+    for item in items:
+        if item["active"]:
+            for tag in item["tags"]:
+                if tag not in active_tags:
+                    active_tags[tag] = 0
+                active_tags[tag] += 1
+            # active_tags |= set(item['tags'])
+            total += 1
+            if not any(map(lambda f: f(item), filters)):
+                active_items.append(item)
+    # Sort items by time
+    active_items.sort(
+        key=lambda i: i["time"]
+        if "time" in i and i["time"]
+        else i["created"]
+        if "created" in i and i["created"]
+        else 0
+    )
 
-	logger.info("Returning {} of {} items".format(len(active_items), total))
-	if errors:
-		read_ex = {
-			'title': 'Read errors',
-			'body': "<pre>{}</pre>".format("\n\n".join(errors)),
-			'created': None,
-		}
-		active_items.insert(0, read_ex)
+    logger.info("Returning {} of {} items".format(len(active_items), total))
+    if errors:
+        read_ex = {
+            "title": "Read errors",
+            "body": "<pre>{}</pre>".format("\n\n".join(errors)),
+            "created": None,
+        }
+        active_items.insert(0, read_ex)
 
-	if total > 0:
-		# Create the feed control item
-		link_table = ["<tr><td>{0}</td><td>{1}</td><td></td><td></td></tr>".format(
-			total, make_query_link("all", [], []))]
-		for tag, count in sorted(active_tags.items(), key=lambda i: i[0].lower()):
-			links = [count]
-			links.append(make_query_link(tag, [tag], []))
-			if tag in wl:
-				new_wl = [t for t in wl if t != tag]
-				links.append(make_query_link("-only", new_wl, bl))
-			else:
-				new_bl = [t for t in bl if t != tag]
-				links.append(make_query_link("+only", wl + [tag], new_bl))
-			if tag in bl:
-				new_bl = [t for t in bl if t != tag]
-				links.append(make_query_link("-not", wl, new_bl))
-			else:
-				new_wl = [t for t in wl if t != tag]
-				links.append(make_query_link("+not", new_wl, bl + [tag]))
-			link_table.append("<tr><td>{0}</td><td>{1}</td><td>{2}</td><td>{3}</td></tr>".format(*links))
-		body = '<table class="feed-control">{}</table>'.format("\n".join(link_table))
+    if total > 0:
+        # Create the feed control item
+        link_table = [
+            "<tr><td>{0}</td><td>{1}</td><td></td><td></td></tr>".format(
+                total, make_query_link("all", [], [])
+            )
+        ]
+        for tag, count in sorted(active_tags.items(), key=lambda i: i[0].lower()):
+            links = [count]
+            links.append(make_query_link(tag, [tag], []))
+            if tag in wl:
+                new_wl = [t for t in wl if t != tag]
+                links.append(make_query_link("-only", new_wl, bl))
+            else:
+                new_bl = [t for t in bl if t != tag]
+                links.append(make_query_link("+only", wl + [tag], new_bl))
+            if tag in bl:
+                new_bl = [t for t in bl if t != tag]
+                links.append(make_query_link("-not", wl, new_bl))
+            else:
+                new_wl = [t for t in wl if t != tag]
+                links.append(make_query_link("+not", new_wl, bl + [tag]))
+            link_table.append(
+                "<tr><td>{0}</td><td>{1}</td><td>{2}</td><td>{3}</td></tr>".format(
+                    *links
+                )
+            )
+        body = '<table class="feed-control">{}</table>'.format("\n".join(link_table))
 
-		feed_control = {
-			'title': 'Feed Control [{}/{}]'.format(len(active_items), total),
-			'body': body,
-		}
-		active_items.insert(0, feed_control)
+        feed_control = {
+            "title": "Feed Control [{}/{}]".format(len(active_items), total),
+            "body": body,
+        }
+        active_items.insert(0, feed_control)
 
-	selection = active_items[:100]
+    selection = active_items[:100]
 
-	return render_template("feed.jinja2",
-		items=selection,
-		mdeac=[
-			{'source': item['source'], 'itemid': item['id']}
-			for item in selection
-			if 'id' in item])
+    return render_template(
+        "feed.jinja2",
+        items=selection,
+        mdeac=[
+            {"source": item["source"], "itemid": item["id"]}
+            for item in selection
+            if "id" in item
+        ],
+    )
 
-@app.route("/deactivate/", methods=['POST'])
+
+@app.route("/deactivate/", methods=["POST"])
 def deactivate():
-	params = request.get_json()
-	if 'source' not in params and 'itemid' not in params:
-		logger.error("Bad request params: {}".format(params))
-	item = loader.load_item(params['source'], params['itemid'])
-	if item['active']:
-		logger.debug(f"Deactivating {params['source']}/{params['itemid']}")
-	item['active'] = False
-	return jsonify({'active': item['active']})
+    params = request.get_json()
+    if "source" not in params and "itemid" not in params:
+        logger.error("Bad request params: {}".format(params))
+    item = loader.load_item(params["source"], params["itemid"])
+    if item["active"]:
+        logger.debug(f"Deactivating {params['source']}/{params['itemid']}")
+    item["active"] = False
+    return jsonify({"active": item["active"]})
 
-@app.route("/punt/", methods=['POST'])
+
+@app.route("/punt/", methods=["POST"])
 def punt():
-	params = request.get_json()
-	if 'source' not in params and 'itemid' not in params:
-		logger.error("Bad request params: {}".format(params))
-	item = loader.load_item(params['source'], params['itemid'])
-	tomorrow = datetime.now() + timedelta(days=1)
-	morning = datetime(tomorrow.year, tomorrow.month, tomorrow.day, 6, 0, 0)
-	til_then = morning.timestamp() - item['created']
-	item['tts'] = til_then
-	return jsonify(item.item)
+    params = request.get_json()
+    if "source" not in params and "itemid" not in params:
+        logger.error("Bad request params: {}".format(params))
+    item = loader.load_item(params["source"], params["itemid"])
+    tomorrow = datetime.now() + timedelta(days=1)
+    morning = datetime(tomorrow.year, tomorrow.month, tomorrow.day, 6, 0, 0)
+    til_then = morning.timestamp() - item["created"]
+    item["tts"] = til_then
+    return jsonify(item.item)
 
-@app.route("/mass-deactivate/", methods=['POST'])
+
+@app.route("/mass-deactivate/", methods=["POST"])
 def mass_deactivate():
-	params = request.get_json()
-	if 'items' not in params:
-		logger.error("Bad request params: {}".format(params))
-	for info in params.get('items', []):
-		source = info['source']
-		itemid = info['itemid']
-		item = loader.load_item(source, itemid)
-		if item['active']:
-			logger.debug(f"Deactivating {info['source']}/{info['itemid']}")
-		item['active'] = False
-	return jsonify({})
+    params = request.get_json()
+    if "items" not in params:
+        logger.error("Bad request params: {}".format(params))
+    for info in params.get("items", []):
+        source = info["source"]
+        itemid = info["itemid"]
+        item = loader.load_item(source, itemid)
+        if item["active"]:
+            logger.debug(f"Deactivating {info['source']}/{info['itemid']}")
+        item["active"] = False
+    return jsonify({})
 
-@app.route("/callback/", methods=['POST'])
+
+@app.route("/callback/", methods=["POST"])
 def callback():
-	params = request.get_json()
-	if 'source' not in params and 'itemid' not in params:
-		logger.error("Bad request params: {}".format(params))
-	logger.info('Executing callback for {}/{}'.format(params['source'], params['itemid']))
-	sources.item_callback(params['source'], params['itemid'])
-	return jsonify({})
+    params = request.get_json()
+    if "source" not in params and "itemid" not in params:
+        logger.error("Bad request params: {}".format(params))
+    logger.info(
+        "Executing callback for {}/{}".format(params["source"], params["itemid"])
+    )
+    sources.item_callback(params["source"], params["itemid"])
+    return jsonify({})
 
-@app.route('/cache/<path:cache_path>')
+
+@app.route("/cache/<path:cache_path>")
 def cache(cache_path):
-	path = os.path.join(CACHE_PATH, cache_path)
-	if not os.path.isfile(path):
-		return abort(404)
-	with open(path, 'rb') as f:
-		return f.read()
+    path = os.path.join(CACHE_PATH, cache_path)
+    if not os.path.isfile(path):
+        return abort(404)
+    with open(path, "rb") as f:
+        return f.read()
 
 
 def wsgi():
-	init_default_logging()
-	return app
+    init_default_logging()
+    return app
