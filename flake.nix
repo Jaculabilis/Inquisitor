@@ -24,12 +24,23 @@
         env = pkgs.inquisitor.dependencyEnv;
       };
 
-      devShells.${system}.default = pkgs.mkShell {
-        buildInputs = [ (pkgs.python3.withPackages (p: [p.poetry])) ];
+      devShells.${system} = {
+        default = self.devShells.${system}.inquisitor;
+        inquisitor = pkgs.mkShell {
+          buildInputs = [ (pkgs.python3.withPackages (p: [p.poetry])) ];
+          shellHook = ''
+            PS1="(inquisitor) $PS1"
+          '';
+        };
+        sources = pkgs.mkShell {
+          buildInputs = [ self.packages.${system}.env ];
+          shellHook = ''
+            PS1="(sources) $PS1"
+          '';
+        };
       };
     };
-  in (my-flake.outputs-for each systems) //
-  {
+  in (my-flake.outputs-for each systems) // {
     overlays.default = final: prev: {
       inquisitor = final.poetry2nix.mkPoetryApplication {
         projectDir = ./.;
