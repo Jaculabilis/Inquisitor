@@ -39,6 +39,26 @@
           '';
         };
       };
+
+      checks.${system}.test-module = let
+        test-lib = import "${nixpkgs}/nixos/lib/testing-python.nix" {
+          inherit system;
+        };
+      in
+        test-lib.makeTest {
+          name = "inquisitor-test-module";
+          nodes = {
+            host = { ... }: {
+              imports = [ self.nixosModules.default ];
+              services.inquisitor.enable = true;
+            };
+          };
+          testScript = ''
+            start_all()
+            host.wait_for_unit("multi-user.target")
+            host.succeed("[ -e /var/lib/inquisitor ]")
+          '';
+        };
     };
   in (my-flake.outputs-for each systems) // {
     overlays.default = final: prev: {
